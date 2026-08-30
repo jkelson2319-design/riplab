@@ -1,10 +1,11 @@
 // RipLab service worker — enables "install" + offline play.
 // Bump CACHE_NAME whenever you change any cached file so clients pick up the update.
-var CACHE_NAME = "riplab-v1";
+var CACHE_NAME = "riplab-v2";
 var CORE_ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
+  "./rlfl-data.js",
   "./app.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",

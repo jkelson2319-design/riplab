@@ -1,14 +1,17 @@
 (function () {
   "use strict";
 
-  var TEAMS = ["Ember City Hawks","Cascade Wolves","Salt Flat Scorpions","Iron Bay Sharks",
-    "Copper Ridge Bulls","Frostpine Elk","Sundown Comets","Harbor Lights FC",
-    "Dust Bowl Bandits","Blackrock Ravens","Golden Delta Gators","Northwind Storm"];
+  var SETS = {
+    rlfl: {
+      key: "rlfl",
+      label: "RLFL — RipLab Football League",
+      teams: RLFL_TEAMS,
+      roster: RLFL_ROSTER
+    }
+  };
+  var activeSet = SETS.rlfl;
+  var TEAMS = activeSet.teams;
 
-  var FIRST = ["Mace","Rook","Deshawn","Kellen","Tobias","Marcus","Eli","Jax","Devon","Silas",
-    "Reid","Cass","Nolan","Trey","Amir","Dutch","Zeke","Mateo","Cole","Bo"];
-  var LAST = ["Hendrix","Okafor","Vance","Delgado","Whitfield","Marsh","Calloway","Bishara",
-    "Novak","Reyes","Sutton","Kwan","Larkin","Ferro","Bramwell","Osei","Tate","Vukovic","Marchetti","Holt"];
   var HIT_TAGS = ["Rookie Auto","Patch Auto","On-Card Auto","Game-Worn Relic","1-of-1 Print Plate","Gold Refractor","Case Hit"];
 
   var RARITY_META = {
@@ -79,11 +82,14 @@
 
   function makeCard(rarity) {
     var range = RARITY_META[rarity].value;
+    var team = pick(TEAMS);
+    var player = pick(activeSet.roster[team]);
     var card = {
       id: uid(),
-      team: pick(TEAMS),
+      team: team,
       rarity: rarity,
-      player: pick(FIRST) + " " + pick(LAST),
+      player: player.name,
+      pos: player.pos,
       tag: (rarity === "epic" || rarity === "legendary") ? pick(HIT_TAGS) : null,
       value: rand(range[0], range[1])
     };
@@ -200,6 +206,8 @@
   function renderShop() {
     var grid = document.getElementById("breakGrid");
     var notice = document.getElementById("shopNotice");
+    var badge = document.getElementById("setBadge");
+    if (badge) badge.textContent = activeSet.label;
     var locked = !!state.activeBreak;
 
     if (!locked && state.cash < cheapestBreakPrice()) {
@@ -222,7 +230,7 @@
           '<div class="break-card__body">' +
             '<h3>' + b.name + '</h3>' +
             '<p>' + b.blurb + '</p>' +
-            '<p class="section-sub">' + b.cards + ' cards · 12-team checklist' + (b.guaranteedHit ? ' · guaranteed Epic+' : '') + '</p>' +
+            '<p class="section-sub">' + b.cards + ' cards · ' + TEAMS.length + '-team checklist' + (b.guaranteedHit ? ' · guaranteed Epic+' : '') + '</p>' +
             '<div class="odds-row">' + oddsChips(b.odds) + '</div>' +
             '<div class="break-card__foot">' + btn + '</div>' +
           '</div>' +
@@ -238,7 +246,7 @@
     return (
       '<div class="' + classes + '">' +
         '<span class="rarity-tag" style="background:' + rarityColorVar(card.rarity) + '">' + RARITY_META[card.rarity].label + '</span>' +
-        '<div><div class="team">' + card.team + '</div><div class="player">' + card.player + '</div>' +
+        '<div><div class="team">' + card.team + '</div><div class="player">' + card.player + (card.pos ? ' <span class="pos-tag">' + card.pos + '</span>' : '') + '</div>' +
         (card.tag ? '<div class="cardtag">' + card.tag + '</div>' : '') + '</div>' +
         '<div style="display:flex; align-items:center; justify-content:space-between;">' +
           (isMine ? '<span class="mine-flag">YOURS</span>' : '<span></span>') +
@@ -342,6 +350,7 @@
         '<tr>' +
           '<td><span class="rarity-dot" style="background:' + rarityColorVar(c.rarity) + '"></span>' + RARITY_META[c.rarity].label + '</td>' +
           '<td>' + c.player + (c.tag ? ' <span class="section-sub">· ' + c.tag + '</span>' : '') + '</td>' +
+          '<td>' + (c.pos || "") + '</td>' +
           '<td>' + c.team + '</td>' +
           '<td class="num mono">' + money(c.value) + '</td>' +
           '<td><button class="btn" data-sell="' + c.id + '">Sell</button></td>' +
@@ -351,7 +360,7 @@
 
     content.innerHTML =
       '<div class="table-wrap"><table>' +
-        '<thead><tr><th>Rarity</th><th>Player</th><th>Team</th><th>Value</th><th></th></tr></thead>' +
+        '<thead><tr><th>Rarity</th><th>Player</th><th>Pos</th><th>Team</th><th>Value</th><th></th></tr></thead>' +
         '<tbody>' + rows + '</tbody>' +
       '</table></div>';
   }
@@ -476,7 +485,7 @@
       spotlight.className = "spotlight-card card-face" + (isMine ? " mine" : "") + (card.rarity === "legendary" ? " legendary" : "") + " revealed";
       spotlight.innerHTML =
         '<span class="rarity-tag" style="background:' + rarityColorVar(card.rarity) + '">' + RARITY_META[card.rarity].label + '</span>' +
-        '<div><div class="team">' + card.team + '</div><div class="player">' + card.player + '</div>' +
+        '<div><div class="team">' + card.team + '</div><div class="player">' + card.player + (card.pos ? ' <span class="pos-tag">' + card.pos + '</span>' : '') + '</div>' +
         (card.tag ? '<div class="cardtag">' + card.tag + '</div>' : '') + '</div>' +
         '<div style="display:flex; align-items:center; justify-content:space-between;">' +
           (isMine ? '<span class="mine-flag">YOURS</span>' : '<span></span>') +
