@@ -57,7 +57,7 @@
   var pendingBreak = null; // format being configured in the buy-in modal
 
   function loadState() {
-    var def = { cash: 500, collection: [], stats: { breaksOpened: 0, totalSpent: 0 }, activeBreak: null };
+    var def = { cash: 5000, collection: [], stats: { breaksOpened: 0, totalSpent: 0 }, activeBreak: null };
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return def;
@@ -199,6 +199,82 @@
       '<circle cx="74" cy="34" r="4" fill="var(--accent)"/>' +
     '</svg>';
 
+  // ---------- team crests + position silhouettes ----------
+  function hashStr(s) {
+    var h = 0;
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return Math.abs(h);
+  }
+  function teamCrestColor(team) { return "hsl(" + (hashStr(team) % 360) + " 55% 42%)"; }
+  function teamInitials(team) {
+    var words = team.split(" ");
+    if (words.length < 2) return team.slice(0, 2).toUpperCase();
+    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+  }
+  function teamCrestHTML(team) {
+    return '<span class="team-crest" style="background:' + teamCrestColor(team) + '">' + teamInitials(team) + '</span>';
+  }
+
+  var POSITION_SILHOUETTE = {
+    QB:
+      '<svg viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg">' +
+        '<circle cx="30" cy="14" r="9" fill="currentColor"/>' +
+        '<rect x="20" y="24" width="20" height="28" rx="9" fill="currentColor"/>' +
+        '<rect x="12" y="27" width="8" height="21" rx="4" fill="currentColor"/>' +
+        '<rect x="37" y="4" width="8" height="26" rx="4" fill="currentColor"/>' +
+        '<circle cx="41" cy="3" r="5" fill="currentColor"/>' +
+        '<rect x="21" y="52" width="7" height="26" rx="3.5" fill="currentColor"/>' +
+        '<rect x="32" y="52" width="7" height="26" rx="3.5" fill="currentColor"/>' +
+      '</svg>',
+    WR:
+      '<svg viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg">' +
+        '<circle cx="30" cy="14" r="9" fill="currentColor"/>' +
+        '<rect x="20" y="24" width="20" height="28" rx="9" fill="currentColor"/>' +
+        '<rect x="10" y="2" width="8" height="28" rx="4" fill="currentColor"/>' +
+        '<rect x="42" y="2" width="8" height="28" rx="4" fill="currentColor"/>' +
+        '<rect x="21" y="52" width="7" height="26" rx="3.5" fill="currentColor"/>' +
+        '<rect x="32" y="52" width="7" height="26" rx="3.5" fill="currentColor"/>' +
+      '</svg>',
+    RB:
+      '<svg viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg">' +
+        '<circle cx="30" cy="16" r="9" fill="currentColor"/>' +
+        '<rect x="19" y="26" width="22" height="26" rx="10" fill="currentColor" transform="rotate(-8 30 39)"/>' +
+        '<rect x="10" y="30" width="8" height="18" rx="4" fill="currentColor"/>' +
+        '<rect x="39" y="32" width="8" height="16" rx="4" fill="currentColor"/>' +
+        '<ellipse cx="44" cy="42" rx="7" ry="9" fill="currentColor"/>' +
+        '<rect x="16" y="50" width="8" height="28" rx="4" fill="currentColor"/>' +
+        '<rect x="33" y="46" width="8" height="22" rx="4" fill="currentColor" transform="rotate(18 37 57)"/>' +
+      '</svg>',
+    TE:
+      '<svg viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg">' +
+        '<circle cx="30" cy="14" r="9" fill="currentColor"/>' +
+        '<rect x="20" y="24" width="20" height="28" rx="9" fill="currentColor"/>' +
+        '<rect x="4" y="26" width="16" height="8" rx="4" fill="currentColor"/>' +
+        '<rect x="40" y="26" width="16" height="8" rx="4" fill="currentColor"/>' +
+        '<rect x="21" y="52" width="7" height="26" rx="3.5" fill="currentColor"/>' +
+        '<rect x="32" y="52" width="7" height="26" rx="3.5" fill="currentColor"/>' +
+      '</svg>',
+    OL:
+      '<svg viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg">' +
+        '<circle cx="30" cy="14" r="9" fill="currentColor"/>' +
+        '<rect x="16" y="22" width="28" height="32" rx="10" fill="currentColor"/>' +
+        '<rect x="6" y="32" width="13" height="9" rx="4.5" fill="currentColor"/>' +
+        '<rect x="41" y="32" width="13" height="9" rx="4.5" fill="currentColor"/>' +
+        '<rect x="14" y="54" width="9" height="24" rx="4" fill="currentColor"/>' +
+        '<rect x="37" y="54" width="9" height="24" rx="4" fill="currentColor"/>' +
+      '</svg>',
+    DEF:
+      '<svg viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg">' +
+        '<circle cx="30" cy="20" r="9" fill="currentColor"/>' +
+        '<rect x="20" y="30" width="20" height="24" rx="9" fill="currentColor"/>' +
+        '<rect x="8" y="34" width="14" height="9" rx="4.5" fill="currentColor"/>' +
+        '<rect x="38" y="34" width="14" height="9" rx="4.5" fill="currentColor"/>' +
+        '<rect x="19" y="52" width="9" height="22" rx="4" fill="currentColor"/>' +
+        '<rect x="32" y="52" width="9" height="22" rx="4" fill="currentColor"/>' +
+      '</svg>'
+  };
+  function positionSilhouette(pos) { return POSITION_SILHOUETTE[pos] || POSITION_SILHOUETTE.DEF; }
+
   // ---------- rendering ----------
 
   function collectionValue() {
@@ -265,7 +341,11 @@
     var classes = "card-face" + (size ? " card-face--" + size : "") + (isMine ? " mine" : "") + (card.rarity === "legendary" ? " legendary" : "");
     return (
       '<div class="' + classes + '">' +
-        '<span class="rarity-tag" style="background:' + rarityColorVar(card.rarity) + '">' + RARITY_META[card.rarity].label + '</span>' +
+        '<div class="pos-silhouette">' + positionSilhouette(card.pos) + '</div>' +
+        '<div class="card-face__top">' +
+          '<span class="rarity-tag" style="background:' + rarityColorVar(card.rarity) + '">' + RARITY_META[card.rarity].label + '</span>' +
+          teamCrestHTML(card.team) +
+        '</div>' +
         '<div><div class="team">' + card.team + '</div><div class="player">' + card.player + (card.pos ? ' <span class="pos-tag">' + card.pos + '</span>' : '') + '</div>' +
         (card.tag ? '<div class="cardtag">' + card.tag + '</div>' : '') + '</div>' +
         '<div style="display:flex; align-items:center; justify-content:space-between;">' +
@@ -325,6 +405,7 @@
             '<div class="reveal-controls">' +
               '<button class="btn btn-primary" id="ripNextBtn">Rip Next Card (' + (total - revealed) + ' left)</button>' +
               '<button class="btn" id="ripAllBtn">' + (autoRipping ? "Stop Auto-Rip" : "Auto-Rip All") + '</button>' +
+              '<button class="btn btn-ghost" id="ripInstantBtn">Instant Rip (skip animation)</button>' +
             '</div>' +
           '</div>' +
         '</div>';
@@ -507,7 +588,11 @@
     later(function () {
       spotlight.className = "spotlight-card card-face" + (isMine ? " mine" : "") + (card.rarity === "legendary" ? " legendary" : "") + " revealed";
       spotlight.innerHTML =
-        '<span class="rarity-tag" style="background:' + rarityColorVar(card.rarity) + '">' + RARITY_META[card.rarity].label + '</span>' +
+        '<div class="pos-silhouette">' + positionSilhouette(card.pos) + '</div>' +
+        '<div class="card-face__top">' +
+          '<span class="rarity-tag" style="background:' + rarityColorVar(card.rarity) + '">' + RARITY_META[card.rarity].label + '</span>' +
+          teamCrestHTML(card.team) +
+        '</div>' +
         '<div><div class="team">' + card.team + '</div><div class="player">' + card.player + (card.pos ? ' <span class="pos-tag">' + card.pos + '</span>' : '') + '</div>' +
         (card.tag ? '<div class="cardtag">' + card.tag + '</div>' : '') + '</div>' +
         '<div style="display:flex; align-items:center; justify-content:space-between;">' +
@@ -548,6 +633,20 @@
     });
   }
 
+  function instantRip() {
+    var ab = state.activeBreak;
+    if (!ab || ab.revealedCount >= ab.cards.length) return;
+    autoRipping = false;
+    busy = false;
+    var wholeBox = ab.yourTeam === null;
+    for (var i = ab.revealedCount; i < ab.cards.length; i++) {
+      var card = ab.cards[i];
+      if (wholeBox || card.team === ab.yourTeam) state.collection.push(card);
+    }
+    ab.revealedCount = ab.cards.length;
+    renderAll();
+  }
+
   document.getElementById("liveContent").addEventListener("click", function (e) {
     if (e.target.closest("#ripNextBtn")) { revealNext(); return; }
     if (e.target.closest("#ripAllBtn")) {
@@ -555,6 +654,7 @@
       if (autoRipping) revealNext(); else renderAll();
       return;
     }
+    if (e.target.closest("#ripInstantBtn")) { instantRip(); return; }
     if (e.target.closest("#backToShopBtn")) {
       state.activeBreak = null;
       switchTab("shop");
@@ -599,7 +699,7 @@
     resetArmed = false;
     e.target.textContent = "Reset Save";
     localStorage.removeItem(STORAGE_KEY);
-    state = { cash: 500, collection: [], stats: { breaksOpened: 0, totalSpent: 0 }, activeBreak: null };
+    state = { cash: 5000, collection: [], stats: { breaksOpened: 0, totalSpent: 0 }, activeBreak: null };
     switchTab("shop");
     renderAll();
     showToast("Save reset");

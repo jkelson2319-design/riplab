@@ -229,6 +229,7 @@ select {
 
 /* Card face — shared by the spotlight reveal and the history thumbnails */
 .card-face {
+  position: relative; overflow: hidden;
   border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
   display: flex; flex-direction: column; justify-content: space-between;
   padding: 12px; height: 100%;
@@ -240,10 +241,23 @@ select {
 }
 .card-face.mine { box-shadow: inset 0 0 0 2px var(--accent-2); }
 .card-face.legendary { box-shadow: var(--glow-legendary), inset 0 0 0 2px var(--rarity-legendary); }
+.card-face__top { display: flex; align-items: center; justify-content: space-between; }
 .rarity-tag {
-  align-self: flex-start; font-size: 10px; font-weight: 700; letter-spacing: .06em;
+  align-self: center; font-size: 10px; font-weight: 700; letter-spacing: .06em;
   text-transform: uppercase; padding: 2px 7px; border-radius: 999px; color: #14161566;
 }
+.team-crest {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 9px; font-weight: 800;
+  letter-spacing: .02em;
+}
+.card-face--sm .team-crest { width: 15px; height: 15px; font-size: 6.5px; }
+.pos-silhouette {
+  position: absolute; right: -4px; bottom: 0; width: 46%; max-width: 62px;
+  opacity: .16; color: var(--text); pointer-events: none;
+}
+.pos-silhouette svg { width: 100%; height: 100%; display: block; }
+.card-face--sm .pos-silhouette { opacity: .13; }
 .card-face .team { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
 .card-face .player { font-size: 14px; font-weight: 700; line-height: 1.25; }
 .card-face .cardtag { font-size: 10.5px; color: var(--accent); font-weight: 600; }
