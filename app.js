@@ -556,6 +556,25 @@
     );
   }
 
+  function packIntroHTML(ab) {
+    return (
+      '<div class="stage pack-intro-stage" id="stageEl">' +
+        '<div class="stage-flash"></div>' +
+        '<div class="pack3d-wrap">' +
+          '<div class="pack3d" id="pack3d">' +
+            '<div class="pack3d__half pack3d__half--top"><div class="pack3d__inner"><span class="pack3d__brand">RLFL</span><span class="pack3d__sub">DEBUT CHROME</span></div></div>' +
+            '<div class="pack3d__half pack3d__half--bottom"><div class="pack3d__inner"><span class="pack3d__brand">RLFL</span><span class="pack3d__sub">DEBUT CHROME</span></div></div>' +
+            '<div class="pack3d__seam"></div>' +
+            '<div class="pack3d__shine"></div>' +
+          '</div>' +
+        '</div>' +
+        '<h3 class="pack-intro-title">Pack ' + (ab.currentPackIndex + 1) + '</h3>' +
+        '<p class="pack-intro-sub">Tap to tear it open.</p>' +
+        '<button class="btn btn-primary" id="tearPackBtn">Tear Open</button>' +
+      '</div>'
+    );
+  }
+
   function packRipHTML(ab) {
     var pack = ab.packs[ab.currentPackIndex];
     var revealed = pack.revealedCount;
@@ -569,6 +588,7 @@
         '</div>'
       );
     }
+    if (revealed === 0 && !tornPacks[ab.currentPackIndex]) return packIntroHTML(ab);
     return (
       '<div class="stage" id="stageEl">' +
         '<div class="stage-flash"></div>' +
@@ -775,6 +795,7 @@
       packs: generatePacks(f, boxCount),
       currentPackIndex: null
     };
+    tornPacks = {};
     closeModal();
     switchTab("live");
     renderAll();
@@ -812,6 +833,7 @@
   // ---------- live break interactions ----------
   var busy = false;
   var autoRipping = false;
+  var tornPacks = {}; // packIndex -> true once its tear-open intro has played this break
 
   function playRevealAnimation(card, isMine, wholeBox, done) {
     var spotlight = document.getElementById("spotlightCard");
@@ -826,12 +848,22 @@
     var mega = card.value >= 1000;
     var refractorBg = REFRACTOR_COLORS[card.tag];
 
-    spotlight.classList.add("shaking");
+    // 3D flip: rotate the card to edge-on, swap its face while invisible, then rotate the
+    // rest of the way back around from the other side so it settles facing forward again
+    // (never rendering the mirrored 90-270deg range a naive 0->180 rotation would show).
+    var flipMs = REDUCE_MOTION ? 20 : timing.shake;
+    spotlight.style.animationDuration = flipMs + "ms";
+    spotlight.classList.add("flip-in");
 
     later(function () {
-      spotlight.className = "spotlight-card " + cardFaceClasses(card, isMine) + " revealed" + (mega ? " mega-hit" : "");
+      spotlight.classList.remove("flip-in");
+      spotlight.style.transform = "perspective(700px) rotateY(-90deg)";
+      spotlight.className = "spotlight-card " + cardFaceClasses(card, isMine) + (mega ? " mega-hit" : "");
       spotlight.style.background = refractorBg || "";
       spotlight.innerHTML = cardInnerHTML(card, isMine);
+      void spotlight.offsetWidth;
+      spotlight.style.transform = "";
+      spotlight.classList.add("flip-out");
       if (slot) slot.classList.add("lifted");
       if (callout) callout.innerHTML = calloutHTML(card, isMine, wholeBox, mega);
       if (big && avatarWrap) avatarWrap.classList.add("hype");
@@ -846,11 +878,11 @@
 
       later(function () {
         if (avatarWrap) avatarWrap.classList.remove("hype");
-        if (spotlight) spotlight.classList.remove("mega-hit");
+        if (spotlight) { spotlight.classList.remove("mega-hit", "flip-out"); spotlight.style.transform = ""; }
         if (stageEl) stageEl.classList.remove("mega-shake");
         done();
       }, timing.hold + (mega ? 700 : 0));
-    }, REDUCE_MOTION ? 20 : timing.shake);
+    }, flipMs);
   }
 
   function revealNext() {
@@ -922,6 +954,21 @@
       }
       return;
     }
+    var tearBtn = e.target.closest("#tearPackBtn");
+    if (tearBtn) {
+      tearBtn.disabled = true;
+      var pack3d = document.getElementById("pack3d");
+      var introStage = document.getElementById("stageEl");
+      if (pack3d) pack3d.classList.add("tearing");
+      triggerFlash(introStage, true);
+      spawnConfetti(introStage, 18, "var(--accent)");
+      later(function () {
+        var abNow = state.activeBreak;
+        if (abNow) tornPacks[abNow.currentPackIndex] = true;
+        renderAll();
+      }, 620);
+      return;
+    }
     if (e.target.closest("#instantRipBoxBtn")) { instantRipBox(); return; }
     if (e.target.closest("#backToPacksBtn")) {
       if (state.activeBreak) state.activeBreak.currentPackIndex = null;
@@ -942,6 +989,34 @@
       return;
     }
   });
+
+  // Holographic tilt + glare: the card leans toward the pointer and a light sweep tracks
+  // it, like tilting a real refractor under a lamp. Works for touch too since pointer
+  // events unify mouse/pen/touch.
+  (function attachCardTilt(container) {
+    container.addEventListener("pointermove", function (e) {
+      var face = e.target.closest(".card-face");
+      if (!face || !container.contains(face)) return;
+      var r = face.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      var px = (e.clientX - r.left) / r.width;
+      var py = (e.clientY - r.top) / r.height;
+      var rx = (0.5 - py) * 16;
+      var ry = (px - 0.5) * 16;
+      face.style.setProperty("--tiltX", rx.toFixed(2) + "deg");
+      face.style.setProperty("--tiltY", ry.toFixed(2) + "deg");
+      face.style.setProperty("--glareX", (px * 100).toFixed(1) + "%");
+      face.style.setProperty("--glareY", (py * 100).toFixed(1) + "%");
+      face.classList.add("tilting");
+    });
+    container.addEventListener("pointerout", function (e) {
+      var face = e.target.closest(".card-face");
+      if (!face) return;
+      var to = e.relatedTarget;
+      if (to && face.contains(to)) return;
+      face.classList.remove("tilting");
+    });
+  })(document.getElementById("liveContent"));
 
   // ---------- collection interactions ----------
   document.getElementById("collectionContent").addEventListener("click", function (e) {
