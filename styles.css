@@ -236,16 +236,6 @@ select {
   opacity: 0; transition: opacity .2s;
 }
 .card-face.tilting::after { opacity: 1; }
-.card-face--back {
-  background: repeating-linear-gradient(45deg, var(--surface-2) 0 8px, var(--surface) 8px 16px);
-  align-items: center; justify-content: center; color: var(--text-muted);
-  font-size: 11px; letter-spacing: .12em; text-align: center;
-  animation: cardBackIdle 3.2s ease-in-out infinite;
-}
-@keyframes cardBackIdle {
-  0%, 100% { transform: perspective(700px) rotateY(0deg) rotateX(0deg); }
-  50% { transform: perspective(700px) rotateY(7deg) rotateX(-3deg); }
-}
 .card-face.mine { box-shadow: inset 0 0 0 2px var(--accent-2); }
 .card-face.legendary { box-shadow: var(--glow-legendary), inset 0 0 0 2px var(--rarity-legendary); }
 
@@ -313,73 +303,27 @@ select {
 /* Breaker stage — deliberately dark regardless of site theme, like a spotlit table,
    not a page section. Text/buttons inside get their own light-on-dark treatment. */
 .stage {
-  position: relative; display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  position: relative; display: flex; flex-direction: column; align-items: center; text-align: center;
   background: radial-gradient(130% 160% at 50% 10%, #262c2a 0%, #171b19 55%, #0a0d0c 100%);
   border: 1px solid #333c3a; border-radius: 20px; overflow: hidden;
-  padding: 30px 24px; margin-bottom: 20px;
+  padding: 32px 24px 28px; margin-bottom: 20px;
   box-shadow: var(--shadow), inset 0 0 70px rgba(0,0,0,.35);
   color: #f0ede4;
 }
-.stage .callout-sub, .stage .pack-progress, .stage .pack-intro-sub { color: #97a29c; }
+.stage .pack-intro-sub { color: #97a29c; }
 .stage .btn { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.18); color: #f0ede4; }
 .stage .btn:hover { background: rgba(255,255,255,.16); }
 .stage .btn-ghost { background: transparent; }
 .stage .btn-primary { background: var(--accent); border-color: var(--accent); color: #1a1300; }
 .stage-flash {
   position: absolute; inset: 0; border-radius: 16px; pointer-events: none;
-  background: radial-gradient(circle at 32% 40%, rgba(245,181,68,.55), transparent 70%);
+  background: radial-gradient(circle at 50% 35%, rgba(245,181,68,.55), transparent 70%);
   opacity: 0;
 }
 .stage-flash.active { animation: flashPulse .6s ease-out; }
-.stage-flash.mega { background: radial-gradient(circle at 32% 40%, rgba(255,213,74,.9), transparent 75%); }
+.stage-flash.mega { background: radial-gradient(circle at 50% 35%, rgba(255,213,74,.9), transparent 75%); }
 @keyframes flashPulse { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; } }
-.stage.mega-shake { animation: stageShake .5s ease-in-out; }
-@keyframes stageShake {
-  0%, 100% { transform: translate(0, 0); }
-  20% { transform: translate(-6px, 3px); }
-  40% { transform: translate(6px, -3px); }
-  60% { transform: translate(-4px, 2px); }
-  80% { transform: translate(4px, -2px); }
-}
 
-.avatar-wrap { flex: 0 0 auto; width: 96px; position: relative; z-index: 1; }
-.avatar-wrap svg { width: 100%; display: block; transition: transform .25s ease, filter .25s ease; }
-.avatar-wrap.hype svg { transform: scale(1.08) rotate(-2deg); filter: drop-shadow(0 0 10px var(--accent)); }
-
-.stage-main { flex: 1 1 260px; min-width: 220px; display: flex; flex-direction: column; align-items: center; gap: 16px; z-index: 1; }
-.pack-progress { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
-.spotlight-slot { position: relative; width: 168px; }
-.spotlight-card { width: 168px; aspect-ratio: 3/4; }
-/* Flip: rotate to edge-on (invisible), the JS swaps face+background exactly there, then
-   rotate back from the other side so the new face lands right-side-up, never passing
-   through the mirrored 90-270deg range a plain 0->180 rotation would render. */
-.spotlight-card.flip-in { animation-name: flipIn; animation-timing-function: cubic-bezier(.5,0,.75,0); animation-fill-mode: forwards; }
-@keyframes flipIn { from { transform: perspective(700px) rotateY(0deg); } to { transform: perspective(700px) rotateY(90deg); } }
-.spotlight-card.flip-out { animation: flipOut .32s cubic-bezier(.2,1.4,.4,1) forwards; }
-@keyframes flipOut {
-  0% { transform: perspective(700px) rotateY(-90deg); }
-  60% { transform: perspective(700px) rotateY(10deg); }
-  100% { transform: perspective(700px) rotateY(0deg); }
-}
-.spotlight-card.mega-hit { animation: flipOut .32s cubic-bezier(.2,1.4,.4,1) forwards, megaPulse 1s ease-in-out .32s infinite alternate; }
-@keyframes megaPulse {
-  from { box-shadow: 0 0 0 3px #ffd54a, 0 0 28px rgba(255,213,74,.55); }
-  to   { box-shadow: 0 0 0 4px #fff3c4, 0 0 54px rgba(255,213,74,.95); }
-}
-.hand {
-  position: absolute; width: 30px; height: 18px; border-radius: 9px; background: var(--accent);
-  bottom: -4px; transition: transform .25s ease; z-index: 2;
-}
-.hand-left { left: -12px; }
-.hand-right { right: -12px; }
-.spotlight-slot.lifted .hand { transform: translateY(-5px); }
-
-.callout-bubble { text-align: center; max-width: 420px; min-height: 40px; }
-.callout-main { font-weight: 700; font-size: 15px; line-height: 1.3; }
-.callout-sub { font-size: 12px; margin-top: 4px; }
-
-/* 3D pack + tear-open intro */
-.pack-intro-stage { flex-direction: column; text-align: center; padding: 36px 24px 30px; }
 .pack-intro-title { margin: 4px 0 2px; font-size: 22px; }
 .pack-intro-sub { font-size: 13px; margin: 0 0 18px; }
 .pack3d-wrap { perspective: 900px; margin-bottom: 4px; }
@@ -443,7 +387,6 @@ select {
 .history-thumb { flex: 0 0 92px; aspect-ratio: 3/4; }
 .history-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
 
-.reveal-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 24px; }
 .recap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); }
 .recap h3 { margin: 0 0 4px; font-size: 24px; }
 .recap-stats { display: flex; gap: 24px; flex-wrap: wrap; margin: 14px 0; }
@@ -476,12 +419,25 @@ select {
 .pack-tile__status { font-size: 10.5px; color: var(--text-muted); }
 .pack-tile.opened .pack-tile__status { color: var(--accent-2); }
 
-.pack-progress { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
-.pack-done {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-  padding: 20px; box-shadow: var(--shadow); margin-bottom: 20px; text-align: center;
+/* Fan reveal — every card in a torn pack, spread like a hand of cards. Each .fan-item
+   starts hidden/stacked (see base rule) and animates to its data-fan-x/y/rot resting
+   transform, staggered per card by app.js (animateFanIn). */
+.fan-wrap { position: relative; height: 220px; width: 100%; max-width: 480px; margin: 6px 0 22px; }
+.fan-item {
+  position: absolute; left: 50%; top: 0; width: 112px; margin-left: -56px; aspect-ratio: 3/4;
+  transform: translate(0, 60px) rotate(0deg); opacity: 0;
+  transition: transform .55s cubic-bezier(.22,.9,.32,1.1), opacity .4s ease-out;
 }
-.pack-done h3 { margin: 0 0 6px; }
+.fan-mega-callout { font-weight: 700; font-size: 15px; margin: 2px 0 10px; }
+.fan-value { font-size: 14px; color: #97a29c; margin-bottom: 18px; }
+.fan-value__amt { color: #fff; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 16px; }
+
+/* Any $1,000+ card gets a permanent pulsing glow, everywhere its face is shown. */
+.card-face.mega-hit { animation: megaPulse 1s ease-in-out infinite alternate; }
+@keyframes megaPulse {
+  from { box-shadow: 0 0 0 3px #ffd54a, 0 0 28px rgba(255,213,74,.55); }
+  to   { box-shadow: 0 0 0 4px #fff3c4, 0 0 54px rgba(255,213,74,.95); }
+}
 
 /* Collection */
 .collection-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }

@@ -267,47 +267,6 @@
 
   // ---------- reveal animation helpers ----------
   var REDUCE_MOTION = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  // How exciting a hit-slot card is, 0 (plain base card) to 4 (Red/Black/Superfractor/Case
-  // Hit) — derived straight from the pack-odds tier, not a separate rarity roll. Any
-  // autograph bumps its base tier up a level.
-  var TIER_ORDER = ["Refractor", "Rookie Refractor", "Green Refractor", "Blue Refractor",
-    "Orange Refractor", "Gold Refractor", "Red Refractor", "Black Refractor", "Superfractor 1/1"];
-  function hitLevel(card) {
-    if (!card.tag) return 0;
-    if (card.tag === "Case Hit") return 4;
-    var key = tierValueKey(card.tag); // null for "Base Autograph"
-    var idx = key ? TIER_ORDER.indexOf(key) : -1;
-    var level = idx <= 1 ? 1 : idx <= 3 ? 2 : idx <= 5 ? 3 : 4;
-    if (card.tag.indexOf("Autograph") !== -1) level = Math.min(4, level + 1);
-    return level;
-  }
-  var HIT_LEVEL_COLOR = ["var(--text-muted)", "var(--accent)", "#2f8a4f", "#d97a1f", "#ffd54a"];
-  var HIT_TIMING = [
-    { shake: 200, hold: 500 },
-    { shake: 230, hold: 650 },
-    { shake: 260, hold: 850 },
-    { shake: 320, hold: 1150 },
-    { shake: 380, hold: 1600 }
-  ];
-  var HIT_CALLOUTS = [
-    ["{player}, {team}.", "{player} of the {team}. Next up."],
-    ["{tag} — {player}, {team}.", "{player}, {team}. Solid pull."],
-    ["Nice hit — {tag}! {player}, {team}.", "{tag} pull: {player}!"],
-    ["BIG HIT! {tag} — {player}, {team}!!", "That's a {tag} — {player}!!"],
-    ["HUGE!! {tag} — {player}, {team}!! Let's GOOO!", "No way — {tag}, {player}!!"]
-  ];
-  function fmt(tpl, card) {
-    return tpl.replace(/{player}/g, card.player).replace(/{team}/g, card.team).replace(/{tag}/g, card.tag || "hit");
-  }
-  function calloutHTML(card, isMine, wholeBox, mega) {
-    var main = mega
-      ? "💰 HUGE HIT!! " + card.player + " just went for " + money(card.value) + "!!"
-      : fmt(pick(HIT_CALLOUTS[hitLevel(card)]), card);
-    var sub = wholeBox
-      ? "Personal break — every card is yours."
-      : (isMine ? "Matches your team — keeping it." : "Not your team — ships to another spot.");
-    return '<div class="callout-main">' + main + '</div><div class="callout-sub">' + sub + '</div>';
-  }
   var pendingTimers = [];
   function later(fn, ms) { var id = setTimeout(fn, ms); pendingTimers.push(id); return id; }
   function spawnConfetti(container, count, baseColor, mega) {
@@ -337,16 +296,6 @@
     if (mega) flash.classList.add("mega");
     flash.classList.add("active");
   }
-  var AVATAR_SVG =
-    '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' +
-      '<rect x="20" y="58" width="60" height="34" rx="14" fill="var(--accent-2)"/>' +
-      '<circle cx="50" cy="38" r="24" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2"/>' +
-      '<path d="M26 30 A24 24 0 0 1 74 30" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>' +
-      '<circle cx="40" cy="40" r="3.4" fill="var(--text)"/>' +
-      '<circle cx="60" cy="40" r="3.4" fill="var(--text)"/>' +
-      '<path d="M39 50 Q50 57 61 50" fill="none" stroke="var(--text)" stroke-width="3" stroke-linecap="round"/>' +
-      '<circle cx="74" cy="34" r="4" fill="var(--accent)"/>' +
-    '</svg>';
 
   // ---------- team crests + position silhouettes ----------
   function hashStr(s) {
@@ -500,7 +449,8 @@
 
   function cardFaceClasses(card, isMine, size) {
     return "card-face" + (size ? " card-face--" + size : "") + (isMine ? " mine" : "") +
-      (card.tag ? " legendary" : "") + (REFRACTOR_COLORS[card.tag] ? " refractor" : "");
+      (card.tag ? " legendary" : "") + (REFRACTOR_COLORS[card.tag] ? " refractor" : "") +
+      (card.value >= 1000 ? " mega-hit" : "");
   }
 
   function cardInnerHTML(card, isMine) {
@@ -575,40 +525,58 @@
     );
   }
 
-  function packRipHTML(ab) {
-    var pack = ab.packs[ab.currentPackIndex];
-    var revealed = pack.revealedCount;
-    var total = pack.cards.length;
-    if (revealed >= total) {
+  // All of a pack's cards fan out at once (Arena-Club style) instead of one flip at a time.
+  // Any $1,000+ card gets a permanent pulsing glow (via cardFaceClasses) plus its own
+  // "huge hit" callout above the fan.
+  function fanRevealHTML(ab, pack) {
+    var wholeBox = ab.yourTeam === null;
+    var kept = pack.cards.filter(function (c) { return wholeBox || c.team === ab.yourTeam; });
+    var keptValue = kept.reduce(function (s, c) { return s + c.value; }, 0);
+    var megaHTML = pack.cards.filter(function (c) { return c.value >= 1000; }).map(function (c) {
+      return '<div class="fan-mega-callout">💰 HUGE HIT!! ' + c.player + ' — ' + money(c.value) + '!!</div>';
+    }).join("");
+    var mid = (pack.cards.length - 1) / 2;
+    var items = pack.cards.map(function (card, i) {
+      var isMine = wholeBox || card.team === ab.yourTeam;
+      var off = i - mid;
+      var rot = (off * 9).toFixed(1) + "deg";
+      var tx = Math.round(off * 44) + "px";
+      var ty = Math.round(Math.abs(off) * 7) + "px";
+      var z = Math.round(100 - Math.abs(off));
       return (
-        '<div class="pack-done">' +
-          '<h3>Pack Complete</h3>' +
-          '<p class="section-sub">All ' + total + ' cards from this pack are revealed.</p>' +
-          '<button class="btn btn-primary" id="backToPacksBtn">Back to Packs</button>' +
+        '<div class="fan-item" data-fan-x="' + tx + '" data-fan-y="' + ty + '" data-fan-rot="' + rot + '" style="z-index:' + z + '">' +
+          cardFaceHTML(card, isMine, "sm") +
         '</div>'
       );
-    }
-    if (revealed === 0 && !tornPacks[ab.currentPackIndex]) return packIntroHTML(ab);
+    }).join("");
+    var recapLine = wholeBox ? "Every card is yours." : kept.length + " of " + pack.cards.length + " matched " + ab.yourTeam + ".";
     return (
-      '<div class="stage" id="stageEl">' +
+      '<div class="stage fan-stage" id="stageEl">' +
         '<div class="stage-flash"></div>' +
-        '<div class="avatar-wrap" id="avatarWrap">' + AVATAR_SVG + '</div>' +
-        '<div class="stage-main">' +
-          '<div class="pack-progress">Pack ' + (ab.currentPackIndex + 1) + ' · card ' + (revealed + 1) + ' of ' + total + '</div>' +
-          '<div class="spotlight-slot" id="spotlightSlot">' +
-            '<div class="spotlight-card card-face card-face--back" id="spotlightCard">NEXT UP</div>' +
-            '<div class="hand hand-left"></div><div class="hand hand-right"></div>' +
-          '</div>' +
-          '<div class="callout-bubble" id="calloutBubble"><div class="callout-main">Ready when you are.</div><div class="callout-sub">Rip the next card to see what you get.</div></div>' +
-          '<div class="reveal-controls">' +
-            '<button class="btn btn-primary" id="ripNextBtn">Rip Next Card (' + (total - revealed) + ' left)</button>' +
-            '<button class="btn" id="ripAllBtn">' + (autoRipping ? "Stop Auto-Rip" : "Auto-Rip Pack") + '</button>' +
-            '<button class="btn btn-ghost" id="ripInstantBtn">Instant Rip Pack</button>' +
-            '<button class="btn btn-ghost" id="backToPacksBtn">Back to Packs</button>' +
-          '</div>' +
-        '</div>' +
+        '<h3 class="pack-intro-title">Pack ' + (ab.currentPackIndex + 1) + ' Complete</h3>' +
+        megaHTML +
+        '<div class="fan-wrap" id="fanWrap">' + items + '</div>' +
+        '<div class="fan-value">' + recapLine + ' Value <span class="fan-value__amt">' + money(keptValue) + '</span></div>' +
+        '<button class="btn btn-primary" id="backToPacksBtn">Back to Packs</button>' +
       '</div>'
     );
+  }
+
+  function packRipHTML(ab) {
+    var pack = ab.packs[ab.currentPackIndex];
+    if (pack.revealedCount >= pack.cards.length) return fanRevealHTML(ab, pack);
+    return packIntroHTML(ab);
+  }
+
+  // Staggers each fanned card from a hidden stack into its resting position/rotation.
+  function animateFanIn(root) {
+    var items = root.querySelectorAll(".fan-item");
+    items.forEach(function (item, i) {
+      later(function () {
+        item.style.transform = "translate(" + item.dataset.fanX + ", " + item.dataset.fanY + ") rotate(" + item.dataset.fanRot + ")";
+        item.style.opacity = "1";
+      }, REDUCE_MOTION ? 0 : i * 90);
+    });
   }
 
   function renderLive() {
@@ -680,6 +648,8 @@
       '<div class="progress-track"><div class="progress-fill" style="width:' + Math.round((revealed / total) * 100) + '%"></div></div>' +
       mainHTML +
       historyHTML;
+
+    if (document.getElementById("fanWrap")) animateFanIn(content);
   }
 
   function renderCollection() {
@@ -795,7 +765,6 @@
       packs: generatePacks(f, boxCount),
       currentPackIndex: null
     };
-    tornPacks = {};
     closeModal();
     switchTab("live");
     renderAll();
@@ -831,106 +800,11 @@
   });
 
   // ---------- live break interactions ----------
-  var busy = false;
-  var autoRipping = false;
-  var tornPacks = {}; // packIndex -> true once its tear-open intro has played this break
-
-  function playRevealAnimation(card, isMine, wholeBox, done) {
-    var spotlight = document.getElementById("spotlightCard");
-    var slot = document.getElementById("spotlightSlot");
-    var callout = document.getElementById("calloutBubble");
-    var avatarWrap = document.getElementById("avatarWrap");
-    var stageEl = document.getElementById("stageEl");
-    if (!spotlight) { done(); return; }
-    var level = hitLevel(card);
-    var timing = HIT_TIMING[level];
-    var big = level >= 3;
-    var mega = card.value >= 1000;
-    var refractorBg = REFRACTOR_COLORS[card.tag];
-
-    // 3D flip: rotate the card to edge-on, swap its face while invisible, then rotate the
-    // rest of the way back around from the other side so it settles facing forward again
-    // (never rendering the mirrored 90-270deg range a naive 0->180 rotation would show).
-    var flipMs = REDUCE_MOTION ? 20 : timing.shake;
-    spotlight.style.animationDuration = flipMs + "ms";
-    spotlight.classList.add("flip-in");
-
-    later(function () {
-      spotlight.classList.remove("flip-in");
-      spotlight.style.transform = "perspective(700px) rotateY(-90deg)";
-      spotlight.className = "spotlight-card " + cardFaceClasses(card, isMine) + (mega ? " mega-hit" : "");
-      spotlight.style.background = refractorBg || "";
-      spotlight.innerHTML = cardInnerHTML(card, isMine);
-      void spotlight.offsetWidth;
-      spotlight.style.transform = "";
-      spotlight.classList.add("flip-out");
-      if (slot) slot.classList.add("lifted");
-      if (callout) callout.innerHTML = calloutHTML(card, isMine, wholeBox, mega);
-      if (big && avatarWrap) avatarWrap.classList.add("hype");
-      if (mega) {
-        spawnConfetti(stageEl, 42, HIT_LEVEL_COLOR[level], true);
-        triggerFlash(stageEl, true);
-        if (stageEl) { stageEl.classList.remove("mega-shake"); void stageEl.offsetWidth; stageEl.classList.add("mega-shake"); }
-      } else {
-        if (big) spawnConfetti(stageEl, level === 4 ? 26 : 12, HIT_LEVEL_COLOR[level]);
-        if (level === 4) triggerFlash(stageEl);
-      }
-
-      later(function () {
-        if (avatarWrap) avatarWrap.classList.remove("hype");
-        if (spotlight) { spotlight.classList.remove("mega-hit", "flip-out"); spotlight.style.transform = ""; }
-        if (stageEl) stageEl.classList.remove("mega-shake");
-        done();
-      }, timing.hold + (mega ? 700 : 0));
-    }, flipMs);
-  }
-
-  function revealNext() {
-    if (busy) return;
-    var ab = state.activeBreak;
-    if (!ab || ab.currentPackIndex === null) return;
-    var pack = ab.packs[ab.currentPackIndex];
-    if (!pack || pack.revealedCount >= pack.cards.length) return;
-    busy = true;
-    var card = pack.cards[pack.revealedCount];
-    var wholeBox = ab.yourTeam === null;
-    var isMine = wholeBox || card.team === ab.yourTeam;
-    playRevealAnimation(card, isMine, wholeBox, function () {
-      pack.revealedCount += 1;
-      if (isMine) state.collection.push(card);
-      busy = false;
-      renderAll();
-      if (autoRipping && pack.revealedCount < pack.cards.length) {
-        later(revealNext, 220);
-      } else {
-        autoRipping = false;
-      }
-    });
-  }
-
-  // Instantly resolves every remaining card in the pack currently being opened.
-  function instantRipPack() {
-    var ab = state.activeBreak;
-    if (!ab || ab.currentPackIndex === null) return;
-    var pack = ab.packs[ab.currentPackIndex];
-    if (!pack || pack.revealedCount >= pack.cards.length) return;
-    autoRipping = false;
-    busy = false;
-    var wholeBox = ab.yourTeam === null;
-    for (var i = pack.revealedCount; i < pack.cards.length; i++) {
-      var card = pack.cards[i];
-      if (wholeBox || card.team === ab.yourTeam) state.collection.push(card);
-    }
-    pack.revealedCount = pack.cards.length;
-    renderAll();
-  }
-
-  // Instantly resolves every remaining card across every unopened pack in the box/case.
+  // Instantly resolves every remaining card across every unopened pack in the box/case
+  // (used by the pack grid's "Instant Rip Everything Left").
   function instantRipBox() {
     var ab = state.activeBreak;
     if (!ab) return;
-    autoRipping = false;
-    busy = false;
     var wholeBox = ab.yourTeam === null;
     ab.packs.forEach(function (pack) {
       for (var i = pack.revealedCount; i < pack.cards.length; i++) {
@@ -941,6 +815,21 @@
     });
     ab.currentPackIndex = null;
     renderAll();
+  }
+
+  // Reveals every card in a torn pack at once (fan) and collects the matching ones.
+  // Returns true if the pack contains a $1,000+ mega hit, so the caller can fire the
+  // one-time celebration burst once the fan has finished settling into place.
+  function collectPack(pack, ab) {
+    var wholeBox = ab.yourTeam === null;
+    var hasMega = false;
+    for (var i = 0; i < pack.cards.length; i++) {
+      var card = pack.cards[i];
+      if (card.value >= 1000) hasMega = true;
+      if (wholeBox || card.team === ab.yourTeam) state.collection.push(card);
+    }
+    pack.revealedCount = pack.cards.length;
+    return hasMega;
   }
 
   document.getElementById("liveContent").addEventListener("click", function (e) {
@@ -964,8 +853,18 @@
       spawnConfetti(introStage, 18, "var(--accent)");
       later(function () {
         var abNow = state.activeBreak;
-        if (abNow) tornPacks[abNow.currentPackIndex] = true;
+        if (!abNow) return;
+        var pack = abNow.packs[abNow.currentPackIndex];
+        var hasMega = collectPack(pack, abNow);
         renderAll();
+        if (hasMega) {
+          later(function () {
+            var fanStage = document.getElementById("stageEl");
+            if (!fanStage) return;
+            spawnConfetti(fanStage, 42, "#ffd54a", true);
+            triggerFlash(fanStage, true);
+          }, (REDUCE_MOTION ? 0 : pack.cards.length * 90) + 350);
+        }
       }, 620);
       return;
     }
@@ -975,13 +874,6 @@
       renderAll();
       return;
     }
-    if (e.target.closest("#ripNextBtn")) { revealNext(); return; }
-    if (e.target.closest("#ripAllBtn")) {
-      autoRipping = !autoRipping;
-      if (autoRipping) revealNext(); else renderAll();
-      return;
-    }
-    if (e.target.closest("#ripInstantBtn")) { instantRipPack(); return; }
     if (e.target.closest("#backToShopBtn")) {
       state.activeBreak = null;
       switchTab("shop");
