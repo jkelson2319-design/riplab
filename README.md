@@ -1,4 +1,4 @@
-# Break Room
+# RipLab
 
 A pack-breaking simulator — buy a spot, rip the box, and see what you pulled.
 
@@ -64,7 +64,7 @@ Once it's live at an HTTPS URL:
 ## Updating the deployed app
 
 Whenever you change `index.html`, `styles.css`, `app.js`, or the icons, bump `CACHE_NAME` in
-`sw.js` (e.g. `break-room-v1` → `break-room-v2`). The service worker caches files by that
+`sw.js` (e.g. `riplab-v1` → `riplab-v2`). The service worker caches files by that
 name, so bumping it is what makes already-installed copies pick up your changes instead of
 serving the stale cached version.
 

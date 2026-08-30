@@ -1,6 +1,6 @@
 {
-  "name": "Break Room",
-  "short_name": "Break Room",
+  "name": "RipLab",
+  "short_name": "RipLab",
   "description": "A pack-breaking simulator — buy a spot, rip the box, and see what you pulled.",
   "start_url": "./index.html",
   "scope": "./",
