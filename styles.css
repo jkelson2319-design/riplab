@@ -241,36 +241,67 @@ select {
 }
 .card-face.mine { box-shadow: inset 0 0 0 2px var(--accent-2); }
 .card-face.legendary { box-shadow: var(--glow-legendary), inset 0 0 0 2px var(--rarity-legendary); }
-.card-face__top { display: flex; align-items: center; justify-content: space-between; }
+
+/* Top bar: league crest (left) · rarity (center) · rookie crest (right, if any) */
+.card-face__topbar { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.rlfl-crest, .rc-crest, .crest-spacer {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  min-width: 18px; font-size: 8px; font-weight: 800; letter-spacing: .03em;
+  padding: 2px 5px; border-radius: 4px; text-align: center;
+}
+.rlfl-crest { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #141615; }
+.rc-crest { background: linear-gradient(135deg, #d4af37, #fff3c4); color: #3a2b06; }
+.crest-spacer { visibility: hidden; }
 .rarity-tag {
-  align-self: center; font-size: 10px; font-weight: 700; letter-spacing: .06em;
+  font-size: 10px; font-weight: 700; letter-spacing: .06em;
   text-transform: uppercase; padding: 2px 7px; border-radius: 999px; color: #14161566;
 }
-.team-crest {
-  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-  width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 9px; font-weight: 800;
-  letter-spacing: .02em;
-}
-.card-face--sm .team-crest { width: 15px; height: 15px; font-size: 6.5px; }
+
+/* Position silhouette — the card's centerpiece art */
 .pos-silhouette {
-  position: absolute; right: -4px; bottom: 0; width: 46%; max-width: 62px;
-  opacity: .16; color: var(--text); pointer-events: none;
+  position: absolute; left: 50%; top: 50%; width: 58%; max-width: 110px;
+  transform: translate(-50%, -50%); opacity: .5; color: var(--text); pointer-events: none; z-index: 0;
 }
 .pos-silhouette svg { width: 100%; height: 100%; display: block; }
-.card-face--sm .pos-silhouette { opacity: .13; }
-.card-face .team { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+.card-face--sm .pos-silhouette { opacity: .4; }
+
+/* Bottom ID row: player name + position (left) · team crest (right) */
+.card-face__id { position: relative; z-index: 1; display: flex; align-items: flex-end; justify-content: space-between; gap: 6px; }
+.card-face__nameblock { min-width: 0; }
+.card-face .team { font-size: 12px; color: var(--text-muted); }
 .card-face .player { font-size: 14px; font-weight: 700; line-height: 1.25; }
 .card-face .cardtag { font-size: 10.5px; color: var(--accent); font-weight: 600; }
 .pos-tag {
   font-size: 9.5px; font-weight: 700; color: var(--text-muted); letter-spacing: .04em;
   border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; vertical-align: middle;
 }
+.team-crest {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 9px; font-weight: 800;
+  letter-spacing: .02em;
+}
+
+.card-face__valuerow { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; }
 .card-face .value { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 14px; }
 .card-face .mine-flag { font-size: 9.5px; color: var(--accent-2); font-weight: 700; letter-spacing: .08em; }
+
+.card-face--sm .team-crest { width: 15px; height: 15px; font-size: 6.5px; }
+.card-face--sm .rlfl-crest, .card-face--sm .rc-crest, .card-face--sm .crest-spacer { font-size: 6px; padding: 1px 3px; min-width: 12px; }
 .card-face--sm .player { font-size: 11.5px; }
 .card-face--sm .team { font-size: 10.5px; }
 .card-face--sm .value { font-size: 12px; }
 .card-face--sm .rarity-tag { font-size: 9px; padding: 2px 6px; }
+
+/* Color-parallel refractors: metallic gradient background with a slow shimmer */
+.card-face.refractor { background-size: 220% 220%; animation: refractorShine 4s ease-in-out infinite; }
+.card-face.refractor .team,
+.card-face.refractor .player,
+.card-face.refractor .cardtag,
+.card-face.refractor .value,
+.card-face.refractor .pos-tag { color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.75); }
+.card-face.refractor .pos-tag { border-color: rgba(255,255,255,.5); }
+.card-face.refractor .pos-silhouette { color: #fff; opacity: .3; }
+@keyframes refractorShine { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
 
 /* Breaker stage */
 .stage {
@@ -284,7 +315,16 @@ select {
   opacity: 0;
 }
 .stage-flash.active { animation: flashPulse .6s ease-out; }
+.stage-flash.mega { background: radial-gradient(circle at 32% 40%, rgba(255,213,74,.9), transparent 75%); }
 @keyframes flashPulse { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; } }
+.stage.mega-shake { animation: stageShake .5s ease-in-out; }
+@keyframes stageShake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-6px, 3px); }
+  40% { transform: translate(6px, -3px); }
+  60% { transform: translate(-4px, 2px); }
+  80% { transform: translate(4px, -2px); }
+}
 
 .avatar-wrap { flex: 0 0 auto; width: 96px; position: relative; z-index: 1; }
 .avatar-wrap svg { width: 100%; display: block; transition: transform .25s ease, filter .25s ease; }
@@ -295,6 +335,11 @@ select {
 .spotlight-card { width: 168px; aspect-ratio: 3/4; }
 .spotlight-card.shaking { animation: packShake .28s ease-in-out; }
 .spotlight-card.revealed { animation: cardPop .45s ease-out; }
+.spotlight-card.mega-hit { animation: cardPop .45s ease-out, megaPulse 1s ease-in-out .45s infinite alternate; }
+@keyframes megaPulse {
+  from { box-shadow: 0 0 0 3px #ffd54a, 0 0 28px rgba(255,213,74,.55); }
+  to   { box-shadow: 0 0 0 4px #fff3c4, 0 0 54px rgba(255,213,74,.95); }
+}
 @keyframes packShake {
   0%, 100% { transform: translateX(0) rotate(0); }
   20% { transform: translateX(-5px) rotate(-2deg); }

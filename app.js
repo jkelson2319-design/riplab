@@ -12,7 +12,18 @@
   var activeSet = SETS.rlfl;
   var TEAMS = activeSet.teams;
 
-  var HIT_TAGS = ["Rookie Auto","Patch Auto","On-Card Auto","Game-Worn Relic","1-of-1 Print Plate","Gold Refractor","Case Hit"];
+  // Color-parallel hits: the card's whole background renders as this metallic gradient.
+  var REFRACTOR_COLORS = {
+    "Gold Refractor":   "linear-gradient(135deg, #4a3510 0%, #d4af37 28%, #fff6cf 50%, #d4af37 72%, #4a3510 100%)",
+    "Black Refractor":  "linear-gradient(135deg, #050505 0%, #3a3a3a 28%, #8a8a8a 50%, #3a3a3a 72%, #050505 100%)",
+    "Blue Refractor":   "linear-gradient(135deg, #06203d 0%, #2f6fb3 28%, #bfe4ff 50%, #2f6fb3 72%, #06203d 100%)",
+    "Green Refractor":  "linear-gradient(135deg, #072a15 0%, #2f8a4f 28%, #c3f7d3 50%, #2f8a4f 72%, #072a15 100%)",
+    "Red Refractor":    "linear-gradient(135deg, #3a0808 0%, #b3302f 28%, #ffcfc7 50%, #b3302f 72%, #3a0808 100%)",
+    "Orange Refractor": "linear-gradient(135deg, #3a2008 0%, #d97a1f 28%, #ffe3bf 50%, #d97a1f 72%, #3a2008 100%)",
+    "Purple Refractor": "linear-gradient(135deg, #200836 0%, #7a3fb3 28%, #e7d1ff 50%, #7a3fb3 72%, #200836 100%)"
+  };
+  var HIT_TAGS = ["Rookie Auto","Patch Auto","On-Card Auto","Game-Worn Relic","1-of-1 Print Plate","Case Hit"]
+    .concat(Object.keys(REFRACTOR_COLORS));
 
   var RARITY_META = {
     common:    { label: "Common",    value: [1, 5] },
@@ -103,6 +114,7 @@
       rarity: rarity,
       player: player.name,
       pos: player.pos,
+      isRookie: !!player.rookie,
       tag: (rarity === "epic" || rarity === "legendary") ? pick(HIT_TAGS) : null,
       value: rand(lo, hi)
     };
@@ -155,8 +167,10 @@
   function fmt(tpl, card) {
     return tpl.replace(/{player}/g, card.player).replace(/{team}/g, card.team).replace(/{tag}/g, card.tag || "hit");
   }
-  function calloutHTML(card, isMine, wholeBox) {
-    var main = fmt(pick(CALLOUTS[card.rarity]), card);
+  function calloutHTML(card, isMine, wholeBox, mega) {
+    var main = mega
+      ? "💰 HUGE HIT!! " + card.player + " just went for " + money(card.value) + "!!"
+      : fmt(pick(CALLOUTS[card.rarity]), card);
     var sub = wholeBox
       ? "Personal break — every card is yours."
       : (isMine ? "Matches your team — keeping it." : "Not your team — ships to another spot.");
@@ -164,9 +178,11 @@
   }
   var pendingTimers = [];
   function later(fn, ms) { var id = setTimeout(fn, ms); pendingTimers.push(id); return id; }
-  function spawnConfetti(container, count, rarity) {
+  function spawnConfetti(container, count, rarity, mega) {
     if (REDUCE_MOTION || !container) return;
-    var colors = [rarityColorVar(rarity), "var(--accent)", "var(--accent-2)"];
+    var colors = mega
+      ? ["#ffd54a", "#fff6cf", "var(--accent)", "#ffffff"]
+      : [rarityColorVar(rarity), "var(--accent)", "var(--accent-2)"];
     for (var i = 0; i < count; i++) {
       var el = document.createElement("span");
       el.className = "confetti-piece";
@@ -180,12 +196,13 @@
       later((function (node) { return function () { if (node.parentNode) node.parentNode.removeChild(node); }; })(el), 1300);
     }
   }
-  function triggerFlash(stageEl) {
+  function triggerFlash(stageEl, mega) {
     if (REDUCE_MOTION || !stageEl) return;
     var flash = stageEl.querySelector(".stage-flash");
     if (!flash) return;
-    flash.classList.remove("active");
+    flash.classList.remove("active", "mega");
     void flash.offsetWidth;
+    if (mega) flash.classList.add("mega");
     flash.classList.add("active");
   }
   var AVATAR_SVG =
@@ -337,23 +354,38 @@
 
   function rarityColorVar(rarity) { return "var(--rarity-" + rarity + ")"; }
 
-  function cardFaceHTML(card, isMine, size) {
-    var classes = "card-face" + (size ? " card-face--" + size : "") + (isMine ? " mine" : "") + (card.rarity === "legendary" ? " legendary" : "");
+  function cardFaceClasses(card, isMine, size) {
+    return "card-face" + (size ? " card-face--" + size : "") + (isMine ? " mine" : "") +
+      (card.rarity === "legendary" ? " legendary" : "") + (REFRACTOR_COLORS[card.tag] ? " refractor" : "");
+  }
+
+  function cardInnerHTML(card, isMine) {
     return (
-      '<div class="' + classes + '">' +
-        '<div class="pos-silhouette">' + positionSilhouette(card.pos) + '</div>' +
-        '<div class="card-face__top">' +
-          '<span class="rarity-tag" style="background:' + rarityColorVar(card.rarity) + '">' + RARITY_META[card.rarity].label + '</span>' +
-          teamCrestHTML(card.team) +
+      '<div class="card-face__topbar">' +
+        '<span class="rlfl-crest">RLFL</span>' +
+        '<span class="rarity-tag" style="background:' + rarityColorVar(card.rarity) + '">' + RARITY_META[card.rarity].label + '</span>' +
+        (card.isRookie ? '<span class="rc-crest">RC</span>' : '<span class="crest-spacer"></span>') +
+      '</div>' +
+      '<div class="pos-silhouette">' + positionSilhouette(card.pos) + '</div>' +
+      '<div class="card-face__id">' +
+        '<div class="card-face__nameblock">' +
+          '<div class="team">' + card.team + '</div>' +
+          '<div class="player">' + card.player + (card.pos ? ' <span class="pos-tag">' + card.pos + '</span>' : '') + '</div>' +
+          (card.tag ? '<div class="cardtag">' + card.tag + '</div>' : '') +
         '</div>' +
-        '<div><div class="team">' + card.team + '</div><div class="player">' + card.player + (card.pos ? ' <span class="pos-tag">' + card.pos + '</span>' : '') + '</div>' +
-        (card.tag ? '<div class="cardtag">' + card.tag + '</div>' : '') + '</div>' +
-        '<div style="display:flex; align-items:center; justify-content:space-between;">' +
-          (isMine ? '<span class="mine-flag">YOURS</span>' : '<span></span>') +
-          '<span class="value mono">' + money(card.value) + '</span>' +
-        '</div>' +
+        teamCrestHTML(card.team) +
+      '</div>' +
+      '<div class="card-face__valuerow">' +
+        (isMine ? '<span class="mine-flag">YOURS</span>' : '<span></span>') +
+        '<span class="value mono">' + money(card.value) + '</span>' +
       '</div>'
     );
+  }
+
+  function cardFaceHTML(card, isMine, size) {
+    var refractorBg = REFRACTOR_COLORS[card.tag];
+    var styleAttr = refractorBg ? ' style="background:' + refractorBg + '"' : '';
+    return '<div class="' + cardFaceClasses(card, isMine, size) + '"' + styleAttr + '>' + cardInnerHTML(card, isMine) + '</div>';
   }
 
   function renderLive() {
@@ -582,33 +614,33 @@
     if (!spotlight) { done(); return; }
     var timing = RARITY_TIMING[card.rarity];
     var big = card.rarity === "epic" || card.rarity === "legendary";
+    var mega = card.value >= 1000;
+    var refractorBg = REFRACTOR_COLORS[card.tag];
 
     spotlight.classList.add("shaking");
 
     later(function () {
-      spotlight.className = "spotlight-card card-face" + (isMine ? " mine" : "") + (card.rarity === "legendary" ? " legendary" : "") + " revealed";
-      spotlight.innerHTML =
-        '<div class="pos-silhouette">' + positionSilhouette(card.pos) + '</div>' +
-        '<div class="card-face__top">' +
-          '<span class="rarity-tag" style="background:' + rarityColorVar(card.rarity) + '">' + RARITY_META[card.rarity].label + '</span>' +
-          teamCrestHTML(card.team) +
-        '</div>' +
-        '<div><div class="team">' + card.team + '</div><div class="player">' + card.player + (card.pos ? ' <span class="pos-tag">' + card.pos + '</span>' : '') + '</div>' +
-        (card.tag ? '<div class="cardtag">' + card.tag + '</div>' : '') + '</div>' +
-        '<div style="display:flex; align-items:center; justify-content:space-between;">' +
-          (isMine ? '<span class="mine-flag">YOURS</span>' : '<span></span>') +
-          '<span class="value mono">' + money(card.value) + '</span>' +
-        '</div>';
+      spotlight.className = "spotlight-card " + cardFaceClasses(card, isMine) + " revealed" + (mega ? " mega-hit" : "");
+      spotlight.style.background = refractorBg || "";
+      spotlight.innerHTML = cardInnerHTML(card, isMine);
       if (slot) slot.classList.add("lifted");
-      if (callout) callout.innerHTML = calloutHTML(card, isMine, wholeBox);
+      if (callout) callout.innerHTML = calloutHTML(card, isMine, wholeBox, mega);
       if (big && avatarWrap) avatarWrap.classList.add("hype");
-      if (big) spawnConfetti(stageEl, card.rarity === "legendary" ? 26 : 12, card.rarity);
-      if (card.rarity === "legendary") triggerFlash(stageEl);
+      if (mega) {
+        spawnConfetti(stageEl, 42, card.rarity, true);
+        triggerFlash(stageEl, true);
+        if (stageEl) { stageEl.classList.remove("mega-shake"); void stageEl.offsetWidth; stageEl.classList.add("mega-shake"); }
+      } else {
+        if (big) spawnConfetti(stageEl, card.rarity === "legendary" ? 26 : 12, card.rarity);
+        if (card.rarity === "legendary") triggerFlash(stageEl);
+      }
 
       later(function () {
         if (avatarWrap) avatarWrap.classList.remove("hype");
+        if (spotlight) spotlight.classList.remove("mega-hit");
+        if (stageEl) stageEl.classList.remove("mega-shake");
         done();
-      }, timing.hold);
+      }, timing.hold + (mega ? 700 : 0));
     }, REDUCE_MOTION ? 20 : timing.shake);
   }
 
