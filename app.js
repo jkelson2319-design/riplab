@@ -47,14 +47,10 @@
     return null;
   }
 
-  var RARITY_META = {
-    common:    { label: "Common",    value: [1, 5] },
-    uncommon:  { label: "Uncommon",  value: [5, 15] },
-    rare:      { label: "Rare",      value: [15, 45] },
-    epic:      { label: "Epic",      value: [45, 120] },
-    legendary: { label: "Legendary", value: [120, 400] }
-  };
-  var RARITY_ORDER = ["common","uncommon","rare","epic","legendary"];
+  // Flat value range for ordinary base cards (every card that isn't a pack's hit slot).
+  var BASE_CARD_VALUE = [1, 8];
+  // Hit-slot cards always start from this baseline, then scale up by parallel/autograph tier.
+  var HIT_CARD_VALUE = [120, 400];
 
   var PRODUCT_NAME = "RLFL Debut Chrome";
 
@@ -94,7 +90,6 @@
       boxPrice: 40, casePrice: 800, boxesPerCase: 20,
       packsPerBox: 8, cardsPerPack: 6, cardsPerBox: 48,
       blurb: "The cheapest way in. Mostly base cards, but every chase card — up to a 1/1 — is still in the pool.",
-      odds: { common: .60, uncommon: .26, rare: .10, epic: .03, legendary: .01 },
       valueScale: 1, guaranteedAutographs: 0,
       caseHitP: 1 / 150, baseAutoP: 1 / 100, colorAutoP: 1 / 400,
       packOdds: { refractor: 3, rookieRefractor: 8, green: 16, blue: 35, orange: 70, gold: 140, red: 350, black: 700, superfractor: 3500 }
@@ -104,7 +99,6 @@
       boxPrice: 250, casePrice: 3000, boxesPerCase: 12,
       packsPerBox: 12, cardsPerPack: 6, cardsPerBox: 72,
       blurb: "The main premium format — noticeably better refractor and autograph odds, one autograph guaranteed.",
-      odds: { common: .46, uncommon: .28, rare: .16, epic: .07, legendary: .03 },
       valueScale: 2.5, guaranteedAutographs: 1,
       caseHitP: 1 / 96, baseAutoP: 1 / 60, colorAutoP: 1 / 70,
       packOdds: { refractor: 2, rookieRefractor: 5, green: 8, blue: 18, orange: 35, gold: 70, red: 175, black: 350, superfractor: 1750 }
@@ -114,7 +108,6 @@
       boxPrice: 600, casePrice: 4800, boxesPerCase: 8,
       packsPerBox: 16, cardsPerPack: 8, cardsPerBox: 128,
       blurb: "The most loaded format on the shelf — a refractor in every pack and two autographs guaranteed.",
-      odds: { common: .30, uncommon: .27, rare: .21, epic: .14, legendary: .08 },
       valueScale: 5, guaranteedAutographs: 2,
       caseHitP: 1 / 60, baseAutoP: 1 / 40, colorAutoP: 1 / 35,
       packOdds: { refractor: 1, rookieRefractor: 3, green: 5, blue: 10, orange: 20, gold: 40, red: 100, black: 200, superfractor: 1000 }
@@ -155,27 +148,16 @@
   }
   function uid() { return Math.random().toString(36).slice(2, 10); }
 
-  function pickRarity(odds) {
-    var r = Math.random(), acc = 0;
-    for (var i = 0; i < RARITY_ORDER.length; i++) {
-      var key = RARITY_ORDER[i];
-      acc += odds[key] || 0;
-      if (r <= acc) return key;
-    }
-    return "common";
-  }
-
   // Plain base card: any card that isn't its pack's designated hit-slot card.
-  function makeCard(rarity, format) {
-    var range = RARITY_META[rarity].value;
+  function makeCard(format) {
     var team = pick(TEAMS);
     var player = pick(activeSet.roster[team]);
     var posMult = POSITION_VALUE_MULT[player.pos] || 1;
     var scale = format.valueScale * posMult;
-    var lo = Math.max(1, Math.round(range[0] * scale));
-    var hi = Math.max(lo, Math.round(range[1] * scale));
+    var lo = Math.max(1, Math.round(BASE_CARD_VALUE[0] * scale));
+    var hi = Math.max(lo, Math.round(BASE_CARD_VALUE[1] * scale));
     return {
-      id: uid(), team: team, rarity: rarity, player: player.name, pos: player.pos,
+      id: uid(), team: team, player: player.name, pos: player.pos,
       isRookie: !!player.rookie, tag: null, value: rand(lo, hi)
     };
   }
@@ -189,20 +171,19 @@
     return pick(pool);
   }
 
-  // A pack's hit-slot card: refractor / autograph / case hit. Always shown as "legendary"
-  // rarity — its real value comes from the parallel + autograph multipliers, not the
-  // common/uncommon/rare/epic/legendary roll that drives ordinary base cards.
+  // A pack's hit-slot card: refractor / autograph / case hit. Its value comes entirely
+  // from the parallel + autograph multipliers on top of the hit baseline, not from any
+  // common/uncommon/rare/epic/legendary roll — every hit card starts from the same place.
   function makeHitCard(format, tag, isAutograph, requiresRookie) {
     var team = pick(TEAMS);
     var player = pickHitPlayer(team, requiresRookie);
     var posMult = POSITION_VALUE_MULT[player.pos] || 1;
     var colorMult = PARALLEL_VALUE_MULT[tierValueKey(tag)] || 1;
     var mult = format.valueScale * posMult * colorMult * (isAutograph ? AUTOGRAPH_VALUE_MULT : 1);
-    var base = RARITY_META.legendary.value;
-    var lo = Math.max(1, Math.round(base[0] * mult));
-    var hi = Math.max(lo, Math.round(base[1] * mult));
+    var lo = Math.max(1, Math.round(HIT_CARD_VALUE[0] * mult));
+    var hi = Math.max(lo, Math.round(HIT_CARD_VALUE[1] * mult));
     return {
-      id: uid(), team: team, rarity: "legendary", player: player.name, pos: player.pos,
+      id: uid(), team: team, player: player.name, pos: player.pos,
       isRookie: !!player.rookie, tag: tag, value: rand(lo, hi)
     };
   }
@@ -234,7 +215,7 @@
       if (i === hitIndex && hit.tag) {
         cards.push(makeHitCard(format, hit.tag, hit.isAutograph, hit.requiresRookie));
       } else {
-        cards.push(makeCard(pickRarity(format.odds), format));
+        cards.push(makeCard(format));
       }
     }
     return { cards: cards, hasAutograph: hit.isAutograph, hitIndex: hitIndex };
@@ -286,27 +267,42 @@
 
   // ---------- reveal animation helpers ----------
   var REDUCE_MOTION = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var RARITY_TIMING = {
-    common:    { shake: 220, hold: 550 },
-    uncommon:  { shake: 240, hold: 650 },
-    rare:      { shake: 280, hold: 850 },
-    epic:      { shake: 340, hold: 1250 },
-    legendary: { shake: 380, hold: 1600 }
-  };
-  var CALLOUTS = {
-    common: ["Common — {player}, {team}.", "{player} of the {team}. Next up."],
-    uncommon: ["Uncommon — {player}, {team}. Not bad.", "{player}, {team}. Solid uncommon."],
-    rare: ["Ooh, a RARE! {player}, {team}.", "Rare pull: {player}, {team}!"],
-    epic: ["EPIC HIT! {tag} — {player}, {team}!!", "That's an EPIC — {player}, {tag}!"],
-    legendary: ["LEGENDARY!! {tag} — {player}, {team}!! Let's GOOO!", "No way — LEGENDARY hit, {player}, {tag}!!"]
-  };
+  // How exciting a hit-slot card is, 0 (plain base card) to 4 (Red/Black/Superfractor/Case
+  // Hit) — derived straight from the pack-odds tier, not a separate rarity roll. Any
+  // autograph bumps its base tier up a level.
+  var TIER_ORDER = ["Refractor", "Rookie Refractor", "Green Refractor", "Blue Refractor",
+    "Orange Refractor", "Gold Refractor", "Red Refractor", "Black Refractor", "Superfractor 1/1"];
+  function hitLevel(card) {
+    if (!card.tag) return 0;
+    if (card.tag === "Case Hit") return 4;
+    var key = tierValueKey(card.tag); // null for "Base Autograph"
+    var idx = key ? TIER_ORDER.indexOf(key) : -1;
+    var level = idx <= 1 ? 1 : idx <= 3 ? 2 : idx <= 5 ? 3 : 4;
+    if (card.tag.indexOf("Autograph") !== -1) level = Math.min(4, level + 1);
+    return level;
+  }
+  var HIT_LEVEL_COLOR = ["var(--text-muted)", "var(--accent)", "#2f8a4f", "#d97a1f", "#ffd54a"];
+  var HIT_TIMING = [
+    { shake: 200, hold: 500 },
+    { shake: 230, hold: 650 },
+    { shake: 260, hold: 850 },
+    { shake: 320, hold: 1150 },
+    { shake: 380, hold: 1600 }
+  ];
+  var HIT_CALLOUTS = [
+    ["{player}, {team}.", "{player} of the {team}. Next up."],
+    ["{tag} — {player}, {team}.", "{player}, {team}. Solid pull."],
+    ["Nice hit — {tag}! {player}, {team}.", "{tag} pull: {player}!"],
+    ["BIG HIT! {tag} — {player}, {team}!!", "That's a {tag} — {player}!!"],
+    ["HUGE!! {tag} — {player}, {team}!! Let's GOOO!", "No way — {tag}, {player}!!"]
+  ];
   function fmt(tpl, card) {
     return tpl.replace(/{player}/g, card.player).replace(/{team}/g, card.team).replace(/{tag}/g, card.tag || "hit");
   }
   function calloutHTML(card, isMine, wholeBox, mega) {
     var main = mega
       ? "💰 HUGE HIT!! " + card.player + " just went for " + money(card.value) + "!!"
-      : fmt(pick(CALLOUTS[card.rarity]), card);
+      : fmt(pick(HIT_CALLOUTS[hitLevel(card)]), card);
     var sub = wholeBox
       ? "Personal break — every card is yours."
       : (isMine ? "Matches your team — keeping it." : "Not your team — ships to another spot.");
@@ -314,11 +310,11 @@
   }
   var pendingTimers = [];
   function later(fn, ms) { var id = setTimeout(fn, ms); pendingTimers.push(id); return id; }
-  function spawnConfetti(container, count, rarity, mega) {
+  function spawnConfetti(container, count, baseColor, mega) {
     if (REDUCE_MOTION || !container) return;
     var colors = mega
       ? ["#ffd54a", "#fff6cf", "var(--accent)", "#ffffff"]
-      : [rarityColorVar(rarity), "var(--accent)", "var(--accent-2)"];
+      : [baseColor, "var(--accent)", "var(--accent-2)"];
     for (var i = 0; i < count; i++) {
       var el = document.createElement("span");
       el.className = "confetti-piece";
@@ -441,11 +437,15 @@
       money(state.stats.totalSpent) + " spent · " + money(collectionValue()) + " in collection";
   }
 
-  function oddsChips(odds) {
-    return RARITY_ORDER.map(function (key) {
-      var pct = Math.round(odds[key] * 100);
-      return '<span class="odds-chip">' + RARITY_META[key].label + " " + pct + "%</span>";
-    }).join("");
+  function oddsChips(f) {
+    var autographOdds = Math.round(1 / (f.baseAutoP + f.colorAutoP));
+    var chips = [
+      "Refractor 1:" + f.packOdds.refractor,
+      "Rookie Refractor 1:" + f.packOdds.rookieRefractor,
+      "Autograph 1:" + autographOdds.toLocaleString(),
+      "Superfractor 1:" + f.packOdds.superfractor.toLocaleString()
+    ];
+    return chips.map(function (c) { return '<span class="odds-chip">' + c + '</span>'; }).join("");
   }
 
   function cheapestBreakPrice() {
@@ -482,7 +482,7 @@
             '<p class="section-sub">' + f.packsPerBox + ' packs/box (' + f.cardsPerPack + ' cards each = ' + f.cardsPerBox + ') · ' +
               f.boxesPerCase + ' boxes/case (' + money(f.casePrice) + ') · ' + TEAMS.length + '-team checklist' +
               (f.guaranteedAutographs ? ' · guaranteed ' + f.guaranteedAutographs + ' autograph' + (f.guaranteedAutographs > 1 ? 's' : '') + '/box' : '') + '</p>' +
-            '<div class="odds-row">' + oddsChips(f.odds) + '</div>' +
+            '<div class="odds-row">' + oddsChips(f) + '</div>' +
             '<div class="break-card__foot">' + btn + '</div>' +
           '</div>' +
         '</div>'
@@ -490,18 +490,25 @@
     }).join("");
   }
 
-  function rarityColorVar(rarity) { return "var(--rarity-" + rarity + ")"; }
+  // What the top-center pill shows: BASE for filler cards, otherwise the hit category.
+  function cardBadge(card) {
+    if (!card.tag) return { label: "BASE", color: "var(--surface-2)" };
+    if (card.tag === "Case Hit") return { label: "CASE HIT", color: "#8a3fd6" };
+    if (card.tag.indexOf("Autograph") !== -1) return { label: "AUTOGRAPH", color: "#d4af37" };
+    return { label: "PARALLEL", color: "var(--accent)" };
+  }
 
   function cardFaceClasses(card, isMine, size) {
     return "card-face" + (size ? " card-face--" + size : "") + (isMine ? " mine" : "") +
-      (card.rarity === "legendary" ? " legendary" : "") + (REFRACTOR_COLORS[card.tag] ? " refractor" : "");
+      (card.tag ? " legendary" : "") + (REFRACTOR_COLORS[card.tag] ? " refractor" : "");
   }
 
   function cardInnerHTML(card, isMine) {
+    var badge = cardBadge(card);
     return (
       '<div class="card-face__topbar">' +
         '<span class="rlfl-crest">RLFL</span>' +
-        '<span class="rarity-tag" style="background:' + rarityColorVar(card.rarity) + '">' + RARITY_META[card.rarity].label + '</span>' +
+        '<span class="rarity-tag" style="background:' + badge.color + '">' + badge.label + '</span>' +
         (card.isRookie ? '<span class="rc-crest">RC</span>' : '<span class="crest-spacer"></span>') +
       '</div>' +
       '<div class="pos-silhouette">' + positionSilhouette(card.pos) + '</div>' +
@@ -619,9 +626,10 @@
     }
 
     var rows = coll.map(function (c) {
+      var badge = cardBadge(c);
       return (
         '<tr>' +
-          '<td><span class="rarity-dot" style="background:' + rarityColorVar(c.rarity) + '"></span>' + RARITY_META[c.rarity].label + '</td>' +
+          '<td><span class="rarity-dot" style="background:' + badge.color + '"></span>' + badge.label + '</td>' +
           '<td>' + c.player + (c.tag ? ' <span class="section-sub">· ' + c.tag + '</span>' : '') + '</td>' +
           '<td>' + (c.pos || "") + '</td>' +
           '<td>' + c.team + '</td>' +
@@ -750,8 +758,9 @@
     var avatarWrap = document.getElementById("avatarWrap");
     var stageEl = document.getElementById("stageEl");
     if (!spotlight) { done(); return; }
-    var timing = RARITY_TIMING[card.rarity];
-    var big = card.rarity === "epic" || card.rarity === "legendary";
+    var level = hitLevel(card);
+    var timing = HIT_TIMING[level];
+    var big = level >= 3;
     var mega = card.value >= 1000;
     var refractorBg = REFRACTOR_COLORS[card.tag];
 
@@ -765,12 +774,12 @@
       if (callout) callout.innerHTML = calloutHTML(card, isMine, wholeBox, mega);
       if (big && avatarWrap) avatarWrap.classList.add("hype");
       if (mega) {
-        spawnConfetti(stageEl, 42, card.rarity, true);
+        spawnConfetti(stageEl, 42, HIT_LEVEL_COLOR[level], true);
         triggerFlash(stageEl, true);
         if (stageEl) { stageEl.classList.remove("mega-shake"); void stageEl.offsetWidth; stageEl.classList.add("mega-shake"); }
       } else {
-        if (big) spawnConfetti(stageEl, card.rarity === "legendary" ? 26 : 12, card.rarity);
-        if (card.rarity === "legendary") triggerFlash(stageEl);
+        if (big) spawnConfetti(stageEl, level === 4 ? 26 : 12, HIT_LEVEL_COLOR[level]);
+        if (level === 4) triggerFlash(stageEl);
       }
 
       later(function () {
