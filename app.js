@@ -709,8 +709,21 @@
     var t = document.getElementById("toast");
     t.textContent = msg;
     t.classList.add("show");
+    t.style.pointerEvents = "";
+    t.style.cursor = "";
+    t.onclick = null;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { t.classList.remove("show"); }, 1800);
+  }
+  // Stays up (no auto-hide) until tapped — used only for "a new version is ready."
+  function showUpdateToast() {
+    var t = document.getElementById("toast");
+    clearTimeout(toastTimer);
+    t.textContent = "Update ready — tap to reload";
+    t.classList.add("show");
+    t.style.pointerEvents = "auto";
+    t.style.cursor = "pointer";
+    t.onclick = function () { window.location.reload(); };
   }
 
   // ---------- tabs ----------
@@ -977,8 +990,19 @@
   // ---------- installable app support ----------
   // Register the service worker so the app can be installed and opens offline after the first visit.
   if ("serviceWorker" in navigator) {
+    var hadController = !!navigator.serviceWorker.controller;
     window.addEventListener("load", function () {
       navigator.serviceWorker.register("sw.js").catch(function () { /* ignore — app still works, just not offline/installable */ });
+    });
+    // The service worker caches the app aggressively for offline use, so an already-open
+    // tab (or an installed PWA someone hasn't reopened in a while) can be stuck showing an
+    // old cached version even after a new one has shipped. skipWaiting()/clients.claim() in
+    // sw.js mean the new worker takes over automatically — this just tells the player when
+    // that's happened so they know to reload for the update instead of wondering why a new
+    // feature isn't there.
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (!hadController) { hadController = true; return; }
+      showUpdateToast();
     });
   }
 
