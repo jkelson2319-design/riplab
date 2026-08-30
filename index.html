@@ -46,9 +46,9 @@
       <section id="shopView" class="view active">
         <div class="section-head">
           <div>
-            <h2>The Shop</h2>
+            <h2>RLFL Debut Chrome</h2>
             <div class="set-badge" id="setBadge"></div>
-            <p class="section-sub">Buy a spot in a break. Random Spot assigns you a team from the checklist; Choose Your Team costs more but you pick who you're rooting for; Rip Your Own Box skips teams entirely.</p>
+            <p class="section-sub">Buy a team to join that format's case break — only cards matching your team land in your collection. Or skip the split and buy a box or a full case for yourself.</p>
           </div>
         </div>
         <div id="shopNotice"></div>
@@ -86,28 +86,28 @@
         <p class="modal-sub" id="pickModalSub"></p>
         <div class="format-option">
           <div class="format-option__row">
-            <strong>Random Spot</strong>
-            <span class="format-price mono" id="randomPrice"></span>
-          </div>
-          <p class="section-sub" style="margin:0;">You're assigned a random team from the checklist.</p>
-          <button class="btn btn-primary btn-block" id="confirmRandomBtn">Take Random Spot</button>
-        </div>
-        <div class="format-option">
-          <div class="format-option__row">
-            <strong>Choose Your Team</strong>
-            <span class="format-price mono" id="chooseTeamPrice"></span>
+            <strong>Buy a Team</strong>
+            <span class="format-price mono" id="modalTeamPrice"></span>
           </div>
           <select id="teamSelect"></select>
-          <p class="section-sub" style="margin:0;">Same pull odds as Random Spot — this just guarantees which team you take home.</p>
-          <button class="btn btn-primary btn-block" id="confirmChooseBtn">Lock In Team</button>
+          <p class="section-sub" style="margin:0;">Joins the case break for this format — only cards matching this team land in your collection.</p>
+          <button class="btn btn-primary btn-block" id="confirmTeamBtn">Lock In Team</button>
         </div>
         <div class="format-option">
           <div class="format-option__row">
-            <strong>Rip Your Own Box</strong>
-            <span class="format-price mono" id="soloPrice"></span>
+            <strong>Buy 1 Box</strong>
+            <span class="format-price mono" id="modalBoxPrice"></span>
           </div>
-          <p class="section-sub" style="margin:0;">Buy every spot in the box. No team to match — every card that comes out is yours.</p>
-          <button class="btn btn-primary btn-block" id="confirmSoloBtn">Buy The Whole Box</button>
+          <p class="section-sub" style="margin:0;">No team to match — every card in the box is yours.</p>
+          <button class="btn btn-primary btn-block" id="confirmBoxBtn">Buy The Box</button>
+        </div>
+        <div class="format-option">
+          <div class="format-option__row">
+            <strong>Buy 1 Case</strong>
+            <span class="format-price mono" id="modalCasePrice"></span>
+          </div>
+          <p class="section-sub" style="margin:0;">Every box in the case — every card is yours.</p>
+          <button class="btn btn-primary btn-block" id="confirmCaseBtn">Buy The Case</button>
         </div>
         <div class="modal-close"><button class="btn btn-ghost" id="closeModalBtn">Cancel</button></div>
       </div>

@@ -23,30 +23,38 @@
   };
   var RARITY_ORDER = ["common","uncommon","rare","epic","legendary"];
 
-  var BREAKS = [
+  var PRODUCT_NAME = "RLFL Debut Chrome";
+
+  var FORMATS = [
     {
-      id: "blaster", tier: "TIER I", name: "Retail Blaster", cards: 10, price: 25,
-      blurb: "Ten cards, low stakes. Honest odds, nothing guaranteed.",
-      odds: { common: .58, uncommon: .25, rare: .12, epic: .04, legendary: .01 },
-      guaranteedHit: false
+      id: "retail", tier: "RETAIL", name: "Retail",
+      boxPrice: 40, casePrice: 800, boxesPerCase: 20, cardsPerBox: 10,
+      blurb: "The entry point. Ten cards a box, honest odds, nothing guaranteed.",
+      odds: { common: .60, uncommon: .26, rare: .10, epic: .03, legendary: .01 },
+      guaranteedHit: false, valueScale: 1
     },
     {
-      id: "hobby", tier: "TIER II", name: "Hobby Box", cards: 16, price: 60,
-      blurb: "Sixteen cards with noticeably better odds at a real hit.",
-      odds: { common: .50, uncommon: .27, rare: .15, epic: .06, legendary: .02 },
-      guaranteedHit: false
+      id: "hobby", tier: "HOBBY", name: "Hobby",
+      boxPrice: 250, casePrice: 3000, boxesPerCase: 12, cardsPerBox: 16,
+      blurb: "Sixteen cards a box with noticeably better odds — and noticeably bigger hits.",
+      odds: { common: .46, uncommon: .28, rare: .16, epic: .07, legendary: .03 },
+      guaranteedHit: false, valueScale: 2.5
     },
     {
-      id: "mega", tier: "TIER III", name: "Mega Case", cards: 24, price: 150,
-      blurb: "Twenty-four cards, the best odds in the shop, and at least one Epic+ guaranteed.",
-      odds: { common: .38, uncommon: .28, rare: .17, epic: .11, legendary: .06 },
-      guaranteedHit: true
+      id: "jumbo", tier: "JUMBO", name: "Jumbo",
+      boxPrice: 600, casePrice: 4800, boxesPerCase: 8, cardsPerBox: 24,
+      blurb: "Twenty-four cards a box, the best odds on the shelf, and at least one Epic+ guaranteed per box.",
+      odds: { common: .30, uncommon: .27, rare: .21, epic: .14, legendary: .08 },
+      guaranteedHit: true, valueScale: 5
     }
   ];
 
+  // Skill-position hierarchy: QBs command the most, linemen the least.
+  var POSITION_VALUE_MULT = { QB: 2.0, WR: 1.6, RB: 1.3, TE: 1.1, DEF: 0.9, OL: 0.6 };
+
   var STORAGE_KEY = "break-room-save-v1";
   var state = loadState();
-  var pendingBreak = null; // break being configured in the modal
+  var pendingBreak = null; // format being configured in the buy-in modal
 
   function loadState() {
     var def = { cash: 500, collection: [], stats: { breaksOpened: 0, totalSpent: 0 }, activeBreak: null };
@@ -55,6 +63,7 @@
       if (!raw) return def;
       var parsed = JSON.parse(raw);
       if (typeof parsed.cash !== "number") return def;
+      if (parsed.activeBreak && !findFormat(parsed.activeBreak.formatId)) parsed.activeBreak = null;
       return parsed;
     } catch (e) { return def; }
   }
@@ -80,10 +89,14 @@
     return "common";
   }
 
-  function makeCard(rarity) {
+  function makeCard(rarity, format) {
     var range = RARITY_META[rarity].value;
     var team = pick(TEAMS);
     var player = pick(activeSet.roster[team]);
+    var posMult = POSITION_VALUE_MULT[player.pos] || 1;
+    var scale = format.valueScale * posMult;
+    var lo = Math.max(1, Math.round(range[0] * scale));
+    var hi = Math.max(lo, Math.round(range[1] * scale));
     var card = {
       id: uid(),
       team: team,
@@ -91,30 +104,37 @@
       player: player.name,
       pos: player.pos,
       tag: (rarity === "epic" || rarity === "legendary") ? pick(HIT_TAGS) : null,
-      value: rand(range[0], range[1])
+      value: rand(lo, hi)
     };
     return card;
   }
 
-  function generateBreakCards(breakDef) {
+  function generateBoxCards(format) {
     var cards = [];
     var hasEpicPlus = false;
-    for (var i = 0; i < breakDef.cards; i++) {
-      var rarity = pickRarity(breakDef.odds);
+    for (var i = 0; i < format.cardsPerBox; i++) {
+      var rarity = pickRarity(format.odds);
       if (rarity === "epic" || rarity === "legendary") hasEpicPlus = true;
-      cards.push(makeCard(rarity));
+      cards.push(makeCard(rarity, format));
     }
-    if (breakDef.guaranteedHit && !hasEpicPlus) {
-      var forced = makeCard(Math.random() < 0.25 ? "legendary" : "epic");
-      cards[cards.length - 1] = forced;
+    if (format.guaranteedHit && !hasEpicPlus) {
+      cards[cards.length - 1] = makeCard(Math.random() < 0.25 ? "legendary" : "epic", format);
     }
     return cards;
   }
 
-  function findBreak(id) {
-    for (var i = 0; i < BREAKS.length; i++) if (BREAKS[i].id === id) return BREAKS[i];
+  function generateCards(format, boxCount) {
+    var all = [];
+    for (var i = 0; i < boxCount; i++) all = all.concat(generateBoxCards(format));
+    return all;
+  }
+
+  function findFormat(id) {
+    for (var i = 0; i < FORMATS.length; i++) if (FORMATS[i].id === id) return FORMATS[i];
     return null;
   }
+
+  function teamPriceFor(format) { return Math.round(format.casePrice / TEAMS.length); }
 
   // ---------- reveal animation helpers ----------
   var REDUCE_MOTION = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -200,7 +220,7 @@
   }
 
   function cheapestBreakPrice() {
-    return BREAKS.reduce(function (min, b) { return Math.min(min, b.price); }, Infinity);
+    return FORMATS.reduce(function (min, f) { return Math.min(min, teamPriceFor(f)); }, Infinity);
   }
 
   function renderShop() {
@@ -220,18 +240,18 @@
       notice.innerHTML = "";
     }
 
-    grid.innerHTML = BREAKS.map(function (b) {
+    grid.innerHTML = FORMATS.map(function (f) {
       var btn = locked
         ? '<button class="btn btn-block" data-goto-live="1">Break In Progress →</button>'
-        : '<button class="btn btn-primary btn-block" data-buy="' + b.id + '">Buy In — ' + money(b.price) + '</button>';
+        : '<button class="btn btn-primary btn-block" data-buy="' + f.id + '">Buy In — from ' + money(teamPriceFor(f)) + '</button>';
       return (
         '<div class="break-card">' +
-          '<div class="break-card__band"><span class="tier">' + b.tier + '</span><span class="price">' + money(b.price) + '</span></div>' +
+          '<div class="break-card__band"><span class="tier">' + f.tier + '</span><span class="price">' + money(f.boxPrice) + '/box</span></div>' +
           '<div class="break-card__body">' +
-            '<h3>' + b.name + '</h3>' +
-            '<p>' + b.blurb + '</p>' +
-            '<p class="section-sub">' + b.cards + ' cards · ' + TEAMS.length + '-team checklist' + (b.guaranteedHit ? ' · guaranteed Epic+' : '') + '</p>' +
-            '<div class="odds-row">' + oddsChips(b.odds) + '</div>' +
+            '<h3>' + f.name + '</h3>' +
+            '<p>' + f.blurb + '</p>' +
+            '<p class="section-sub">' + f.cardsPerBox + ' cards/box · ' + f.boxesPerCase + ' boxes/case (' + money(f.casePrice) + ') · ' + TEAMS.length + '-team checklist' + (f.guaranteedHit ? ' · guaranteed Epic+/box' : '') + '</p>' +
+            '<div class="odds-row">' + oddsChips(f.odds) + '</div>' +
             '<div class="break-card__foot">' + btn + '</div>' +
           '</div>' +
         '</div>'
@@ -268,13 +288,15 @@
       return;
     }
 
-    var breakDef = findBreak(ab.breakId);
+    var format = findFormat(ab.formatId);
     var revealed = ab.revealedCount;
     var total = ab.cards.length;
     var done = revealed >= total;
 
-    var wholeBox = ab.yourTeam === null;
-    sub.textContent = wholeBox ? breakDef.name + " · personal break, whole box" : breakDef.name + " · your team: " + ab.yourTeam;
+    var wholeBox = ab.mode !== "team";
+    var modeLabel = ab.mode === "case" ? "1 Case" : ab.mode === "box" ? "1 Box" : "Team Break";
+    sub.textContent = PRODUCT_NAME + " " + format.name + " · " + modeLabel +
+      (wholeBox ? "" : " · your team: " + ab.yourTeam);
 
     var historyHTML = "";
     if (revealed > 0) {
@@ -311,7 +333,7 @@
       var keptValue = kept.reduce(function (s, c) { return s + c.value; }, 0);
       var net = keptValue - ab.price;
       var recapLine = wholeBox
-        ? "It's your whole box — all " + total + " cards went into your collection."
+        ? "It's your " + (ab.mode === "case" ? "whole case" : "whole box") + " — all " + total + " cards went into your collection."
         : kept.length + " of " + total + " cards matched " + ab.yourTeam + " and went into your collection.";
       stageOrRecap =
         '<div class="recap">' +
@@ -327,7 +349,7 @@
     }
 
     content.innerHTML =
-      '<div class="live-header"><span class="your-team-badge">' + (wholeBox ? "📦 Personal Break — whole box is yours" : "🎯 " + ab.yourTeam) + '</span></div>' +
+      '<div class="live-header"><span class="your-team-badge">' + (wholeBox ? "📦 Personal " + (ab.mode === "case" ? "Case" : "Box") + " — every card is yours" : "🎯 " + ab.yourTeam) + '</span></div>' +
       '<div class="progress-track"><div class="progress-fill" style="width:' + Math.round((revealed / total) * 100) + '%"></div></div>' +
       stageOrRecap +
       historyHTML;
@@ -399,36 +421,37 @@
 
   // ---------- modal ----------
   var backdrop = document.getElementById("pickModalBackdrop");
-  function openModal(breakId) {
-    var b = findBreak(breakId);
-    if (!b) return;
-    pendingBreak = b;
-    document.getElementById("pickModalTitle").textContent = b.name;
-    document.getElementById("pickModalSub").textContent = b.cards + " cards · pick how you buy in";
-    document.getElementById("randomPrice").textContent = money(b.price);
-    var choosePrice = Math.round(b.price * 1.6);
-    document.getElementById("chooseTeamPrice").textContent = money(choosePrice);
+  function openModal(formatId) {
+    var f = findFormat(formatId);
+    if (!f) return;
+    pendingBreak = f;
+    var teamPrice = teamPriceFor(f);
+    document.getElementById("pickModalTitle").textContent = PRODUCT_NAME + " — " + f.name;
+    document.getElementById("pickModalSub").textContent = f.cardsPerBox + " cards/box · " + f.boxesPerCase + " boxes/case · pick how you buy in";
+    document.getElementById("modalTeamPrice").textContent = money(teamPrice);
     var sel = document.getElementById("teamSelect");
     sel.innerHTML = TEAMS.map(function (t) { return '<option value="' + t + '">' + t + '</option>'; }).join("");
-    var soloPrice = b.price * TEAMS.length;
-    document.getElementById("soloPrice").textContent = money(soloPrice);
-    document.getElementById("confirmRandomBtn").disabled = state.cash < b.price;
-    document.getElementById("confirmChooseBtn").disabled = state.cash < choosePrice;
-    document.getElementById("confirmSoloBtn").disabled = state.cash < soloPrice;
+    document.getElementById("modalBoxPrice").textContent = money(f.boxPrice);
+    document.getElementById("modalCasePrice").textContent = money(f.casePrice);
+    document.getElementById("confirmTeamBtn").disabled = state.cash < teamPrice;
+    document.getElementById("confirmBoxBtn").disabled = state.cash < f.boxPrice;
+    document.getElementById("confirmCaseBtn").disabled = state.cash < f.casePrice;
     backdrop.hidden = false;
   }
   function closeModal() { backdrop.hidden = true; pendingBreak = null; }
 
-  function startBreak(yourTeam, price) {
-    var b = pendingBreak;
+  function startBreak(mode, yourTeam, price) {
+    var f = pendingBreak;
+    var boxCount = mode === "box" ? 1 : f.boxesPerCase;
     state.cash -= price;
     state.stats.totalSpent += price;
     state.stats.breaksOpened += 1;
     state.activeBreak = {
-      breakId: b.id,
+      formatId: f.id,
+      mode: mode,
       yourTeam: yourTeam,
       price: price,
-      cards: generateBreakCards(b),
+      cards: generateCards(f, boxCount),
       revealedCount: 0
     };
     closeModal();
@@ -451,18 +474,18 @@
   });
   document.getElementById("closeModalBtn").addEventListener("click", closeModal);
   backdrop.addEventListener("click", function (e) { if (e.target === backdrop) closeModal(); });
-  document.getElementById("confirmRandomBtn").addEventListener("click", function () {
-    if (!pendingBreak) return;
-    startBreak(pick(TEAMS), pendingBreak.price);
-  });
-  document.getElementById("confirmSoloBtn").addEventListener("click", function () {
-    if (!pendingBreak) return;
-    startBreak(null, pendingBreak.price * TEAMS.length);
-  });
-  document.getElementById("confirmChooseBtn").addEventListener("click", function () {
+  document.getElementById("confirmTeamBtn").addEventListener("click", function () {
     if (!pendingBreak) return;
     var team = document.getElementById("teamSelect").value;
-    startBreak(team, Math.round(pendingBreak.price * 1.6));
+    startBreak("team", team, teamPriceFor(pendingBreak));
+  });
+  document.getElementById("confirmBoxBtn").addEventListener("click", function () {
+    if (!pendingBreak) return;
+    startBreak("box", null, pendingBreak.boxPrice);
+  });
+  document.getElementById("confirmCaseBtn").addEventListener("click", function () {
+    if (!pendingBreak) return;
+    startBreak("case", null, pendingBreak.casePrice);
   });
 
   // ---------- live break interactions ----------
