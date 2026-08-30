@@ -132,7 +132,7 @@
       if (!raw) return def;
       var parsed = JSON.parse(raw);
       if (typeof parsed.cash !== "number") return def;
-      if (parsed.activeBreak && !findFormat(parsed.activeBreak.formatId)) parsed.activeBreak = null;
+      if (parsed.activeBreak && (!findFormat(parsed.activeBreak.formatId) || !Array.isArray(parsed.activeBreak.packs))) parsed.activeBreak = null;
       return parsed;
     } catch (e) { return def; }
   }
@@ -233,7 +233,9 @@
     pack.hasAutograph = true;
   }
 
-  function generateBoxCards(format) {
+  // Returns one box's packs, each still its own unopened group of cards, so the player
+  // picks which pack to rip rather than the box being flattened into one card stream.
+  function generateBoxPacks(format) {
     var packs = [];
     var autoCount = 0;
     for (var p = 0; p < format.packsPerBox; p++) {
@@ -247,14 +249,12 @@
       upgradePackToAutograph(candidates.length ? pick(candidates) : pick(packs), format);
       autoCount++;
     }
-    var cards = [];
-    for (var k = 0; k < packs.length; k++) cards = cards.concat(packs[k].cards);
-    return cards;
+    return packs.map(function (p) { return { cards: p.cards, revealedCount: 0 }; });
   }
 
-  function generateCards(format, boxCount) {
+  function generatePacks(format, boxCount) {
     var all = [];
-    for (var i = 0; i < boxCount; i++) all = all.concat(generateBoxCards(format));
+    for (var i = 0; i < boxCount; i++) all = all.concat(generateBoxPacks(format));
     return all;
   }
 
@@ -533,6 +533,64 @@
     return '<div class="' + cardFaceClasses(card, isMine, size) + '"' + styleAttr + '>' + cardInnerHTML(card, isMine) + '</div>';
   }
 
+  function packGridHTML(ab, format) {
+    var tiles = ab.packs.map(function (p, i) {
+      var done = p.revealedCount >= p.cards.length;
+      var multiBox = ab.packs.length > format.packsPerBox;
+      var label = multiBox
+        ? "Box " + (Math.floor(i / format.packsPerBox) + 1) + " · Pack " + ((i % format.packsPerBox) + 1)
+        : "Pack " + (i + 1);
+      return (
+        '<button class="pack-tile' + (done ? ' opened' : '') + '" data-pack="' + i + '"' + (done ? ' disabled' : '') + '>' +
+          '<span class="pack-tile__icon">' + (done ? "📭" : "📦") + '</span>' +
+          '<span class="pack-tile__label">' + label + '</span>' +
+          '<span class="pack-tile__status">' + (done ? "Opened" : p.cards.length + " cards") + '</span>' +
+        '</button>'
+      );
+    }).join("");
+    return (
+      '<div class="pack-grid-wrap">' +
+        '<div class="pack-grid-head"><h3>Choose a Pack</h3><button class="btn" id="instantRipBoxBtn">Instant Rip Everything Left</button></div>' +
+        '<div class="pack-grid">' + tiles + '</div>' +
+      '</div>'
+    );
+  }
+
+  function packRipHTML(ab) {
+    var pack = ab.packs[ab.currentPackIndex];
+    var revealed = pack.revealedCount;
+    var total = pack.cards.length;
+    if (revealed >= total) {
+      return (
+        '<div class="pack-done">' +
+          '<h3>Pack Complete</h3>' +
+          '<p class="section-sub">All ' + total + ' cards from this pack are revealed.</p>' +
+          '<button class="btn btn-primary" id="backToPacksBtn">Back to Packs</button>' +
+        '</div>'
+      );
+    }
+    return (
+      '<div class="stage" id="stageEl">' +
+        '<div class="stage-flash"></div>' +
+        '<div class="avatar-wrap" id="avatarWrap">' + AVATAR_SVG + '</div>' +
+        '<div class="stage-main">' +
+          '<div class="pack-progress">Pack ' + (ab.currentPackIndex + 1) + ' · card ' + (revealed + 1) + ' of ' + total + '</div>' +
+          '<div class="spotlight-slot" id="spotlightSlot">' +
+            '<div class="spotlight-card card-face card-face--back" id="spotlightCard">NEXT UP</div>' +
+            '<div class="hand hand-left"></div><div class="hand hand-right"></div>' +
+          '</div>' +
+          '<div class="callout-bubble" id="calloutBubble"><div class="callout-main">Ready when you are.</div><div class="callout-sub">Rip the next card to see what you get.</div></div>' +
+          '<div class="reveal-controls">' +
+            '<button class="btn btn-primary" id="ripNextBtn">Rip Next Card (' + (total - revealed) + ' left)</button>' +
+            '<button class="btn" id="ripAllBtn">' + (autoRipping ? "Stop Auto-Rip" : "Auto-Rip Pack") + '</button>' +
+            '<button class="btn btn-ghost" id="ripInstantBtn">Instant Rip Pack</button>' +
+            '<button class="btn btn-ghost" id="backToPacksBtn">Back to Packs</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
   function renderLive() {
     var content = document.getElementById("liveContent");
     var sub = document.getElementById("liveSub");
@@ -546,8 +604,8 @@
     }
 
     var format = findFormat(ab.formatId);
-    var revealed = ab.revealedCount;
-    var total = ab.cards.length;
+    var total = ab.packs.reduce(function (s, p) { return s + p.cards.length; }, 0);
+    var revealed = ab.packs.reduce(function (s, p) { return s + p.revealedCount; }, 0);
     var done = revealed >= total;
 
     var wholeBox = ab.mode !== "team";
@@ -555,9 +613,14 @@
     sub.textContent = PRODUCT_NAME + " " + format.name + " · " + modeLabel +
       (wholeBox ? "" : " · your team: " + ab.yourTeam);
 
+    var revealedCards = [];
+    ab.packs.forEach(function (p) {
+      for (var i = 0; i < p.revealedCount; i++) revealedCards.push(p.cards[i]);
+    });
+
     var historyHTML = "";
-    if (revealed > 0) {
-      var seen = ab.cards.slice(0, revealed).slice().reverse();
+    if (revealedCards.length > 0) {
+      var seen = revealedCards.slice().reverse();
       historyHTML =
         '<div class="history-label">Pulled so far (' + revealed + ' / ' + total + ')</div>' +
         '<div class="history-strip">' +
@@ -567,33 +630,15 @@
         '</div>';
     }
 
-    var stageOrRecap;
-    if (!done) {
-      stageOrRecap =
-        '<div class="stage" id="stageEl">' +
-          '<div class="stage-flash"></div>' +
-          '<div class="avatar-wrap" id="avatarWrap">' + AVATAR_SVG + '</div>' +
-          '<div class="stage-main">' +
-            '<div class="spotlight-slot" id="spotlightSlot">' +
-              '<div class="spotlight-card card-face card-face--back" id="spotlightCard">NEXT UP</div>' +
-              '<div class="hand hand-left"></div><div class="hand hand-right"></div>' +
-            '</div>' +
-            '<div class="callout-bubble" id="calloutBubble"><div class="callout-main">Ready when you are.</div><div class="callout-sub">Rip the next card to see what you get.</div></div>' +
-            '<div class="reveal-controls">' +
-              '<button class="btn btn-primary" id="ripNextBtn">Rip Next Card (' + (total - revealed) + ' left)</button>' +
-              '<button class="btn" id="ripAllBtn">' + (autoRipping ? "Stop Auto-Rip" : "Auto-Rip All") + '</button>' +
-              '<button class="btn btn-ghost" id="ripInstantBtn">Instant Rip (skip animation)</button>' +
-            '</div>' +
-          '</div>' +
-        '</div>';
-    } else {
-      var kept = ab.cards.filter(function (c) { return wholeBox || c.team === ab.yourTeam; });
+    var mainHTML;
+    if (done) {
+      var kept = revealedCards.filter(function (c) { return wholeBox || c.team === ab.yourTeam; });
       var keptValue = kept.reduce(function (s, c) { return s + c.value; }, 0);
       var net = keptValue - ab.price;
       var recapLine = wholeBox
         ? "It's your " + (ab.mode === "case" ? "whole case" : "whole box") + " — all " + total + " cards went into your collection."
         : kept.length + " of " + total + " cards matched " + ab.yourTeam + " and went into your collection.";
-      stageOrRecap =
+      mainHTML =
         '<div class="recap">' +
           '<h3>Break Complete</h3>' +
           '<p class="section-sub">' + recapLine + '</p>' +
@@ -604,12 +649,16 @@
           '</div>' +
           '<button class="btn btn-primary" id="backToShopBtn">Back to Shop</button>' +
         '</div>';
+    } else if (ab.currentPackIndex === null) {
+      mainHTML = packGridHTML(ab, format);
+    } else {
+      mainHTML = packRipHTML(ab);
     }
 
     content.innerHTML =
       '<div class="live-header"><span class="your-team-badge">' + (wholeBox ? "📦 Personal " + (ab.mode === "case" ? "Case" : "Box") + " — every card is yours" : "🎯 " + ab.yourTeam) + '</span></div>' +
       '<div class="progress-track"><div class="progress-fill" style="width:' + Math.round((revealed / total) * 100) + '%"></div></div>' +
-      stageOrRecap +
+      mainHTML +
       historyHTML;
   }
 
@@ -710,8 +759,8 @@
       mode: mode,
       yourTeam: yourTeam,
       price: price,
-      cards: generateCards(f, boxCount),
-      revealedCount: 0
+      packs: generatePacks(f, boxCount),
+      currentPackIndex: null
     };
     closeModal();
     switchTab("live");
@@ -794,17 +843,19 @@
   function revealNext() {
     if (busy) return;
     var ab = state.activeBreak;
-    if (!ab || ab.revealedCount >= ab.cards.length) return;
+    if (!ab || ab.currentPackIndex === null) return;
+    var pack = ab.packs[ab.currentPackIndex];
+    if (!pack || pack.revealedCount >= pack.cards.length) return;
     busy = true;
-    var card = ab.cards[ab.revealedCount];
+    var card = pack.cards[pack.revealedCount];
     var wholeBox = ab.yourTeam === null;
     var isMine = wholeBox || card.team === ab.yourTeam;
     playRevealAnimation(card, isMine, wholeBox, function () {
-      ab.revealedCount += 1;
+      pack.revealedCount += 1;
       if (isMine) state.collection.push(card);
       busy = false;
       renderAll();
-      if (autoRipping && ab.revealedCount < ab.cards.length) {
+      if (autoRipping && pack.revealedCount < pack.cards.length) {
         later(revealNext, 220);
       } else {
         autoRipping = false;
@@ -812,28 +863,65 @@
     });
   }
 
-  function instantRip() {
+  // Instantly resolves every remaining card in the pack currently being opened.
+  function instantRipPack() {
     var ab = state.activeBreak;
-    if (!ab || ab.revealedCount >= ab.cards.length) return;
+    if (!ab || ab.currentPackIndex === null) return;
+    var pack = ab.packs[ab.currentPackIndex];
+    if (!pack || pack.revealedCount >= pack.cards.length) return;
     autoRipping = false;
     busy = false;
     var wholeBox = ab.yourTeam === null;
-    for (var i = ab.revealedCount; i < ab.cards.length; i++) {
-      var card = ab.cards[i];
+    for (var i = pack.revealedCount; i < pack.cards.length; i++) {
+      var card = pack.cards[i];
       if (wholeBox || card.team === ab.yourTeam) state.collection.push(card);
     }
-    ab.revealedCount = ab.cards.length;
+    pack.revealedCount = pack.cards.length;
+    renderAll();
+  }
+
+  // Instantly resolves every remaining card across every unopened pack in the box/case.
+  function instantRipBox() {
+    var ab = state.activeBreak;
+    if (!ab) return;
+    autoRipping = false;
+    busy = false;
+    var wholeBox = ab.yourTeam === null;
+    ab.packs.forEach(function (pack) {
+      for (var i = pack.revealedCount; i < pack.cards.length; i++) {
+        var card = pack.cards[i];
+        if (wholeBox || card.team === ab.yourTeam) state.collection.push(card);
+      }
+      pack.revealedCount = pack.cards.length;
+    });
+    ab.currentPackIndex = null;
     renderAll();
   }
 
   document.getElementById("liveContent").addEventListener("click", function (e) {
+    var packBtn = e.target.closest("[data-pack]");
+    if (packBtn) {
+      var idx = parseInt(packBtn.dataset.pack, 10);
+      var ab = state.activeBreak;
+      if (ab && ab.packs[idx] && ab.packs[idx].revealedCount < ab.packs[idx].cards.length) {
+        ab.currentPackIndex = idx;
+        renderAll();
+      }
+      return;
+    }
+    if (e.target.closest("#instantRipBoxBtn")) { instantRipBox(); return; }
+    if (e.target.closest("#backToPacksBtn")) {
+      if (state.activeBreak) state.activeBreak.currentPackIndex = null;
+      renderAll();
+      return;
+    }
     if (e.target.closest("#ripNextBtn")) { revealNext(); return; }
     if (e.target.closest("#ripAllBtn")) {
       autoRipping = !autoRipping;
       if (autoRipping) revealNext(); else renderAll();
       return;
     }
-    if (e.target.closest("#ripInstantBtn")) { instantRip(); return; }
+    if (e.target.closest("#ripInstantBtn")) { instantRipPack(); return; }
     if (e.target.closest("#backToShopBtn")) {
       state.activeBreak = null;
       switchTab("shop");
