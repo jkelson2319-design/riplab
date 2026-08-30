@@ -249,7 +249,7 @@
       upgradePackToAutograph(candidates.length ? pick(candidates) : pick(packs), format);
       autoCount++;
     }
-    return packs.map(function (p) { return { cards: p.cards, revealedCount: 0 }; });
+    return packs.map(function (p) { return { cards: p.cards, revealedCount: 0, torn: false }; });
   }
 
   function generatePacks(format, boxCount) {
@@ -525,38 +525,47 @@
     );
   }
 
-  // All of a pack's cards fan out at once (Arena-Club style) instead of one flip at a time.
-  // Any $1,000+ card gets a permanent pulsing glow (via cardFaceClasses) plus its own
-  // "huge hit" callout above the fan.
-  function fanRevealHTML(ab, pack) {
+  // A stacked deck: the current card sits fully visible at front (left), the rest of the
+  // pack peeks out behind/to the right just enough to hint at its color (so a refractor
+  // sheen or autograph gold is visible before you get to it). Swiping the front card up
+  // (or tapping the button) takes it and reveals the next one.
+  function packStackHTML(ab, pack) {
     var wholeBox = ab.yourTeam === null;
-    var kept = pack.cards.filter(function (c) { return wholeBox || c.team === ab.yourTeam; });
-    var keptValue = kept.reduce(function (s, c) { return s + c.value; }, 0);
-    var megaHTML = pack.cards.filter(function (c) { return c.value >= 1000; }).map(function (c) {
-      return '<div class="fan-mega-callout">💰 HUGE HIT!! ' + c.player + ' — ' + money(c.value) + '!!</div>';
-    }).join("");
-    var mid = (pack.cards.length - 1) / 2;
-    var items = pack.cards.map(function (card, i) {
+    var remaining = pack.cards.slice(pack.revealedCount);
+    var wrapWidth = 118 + Math.max(0, remaining.length - 1) * 30;
+    var items = remaining.map(function (card, k) {
       var isMine = wholeBox || card.team === ab.yourTeam;
-      var off = i - mid;
-      var rot = (off * 9).toFixed(1) + "deg";
-      var tx = Math.round(off * 44) + "px";
-      var ty = Math.round(Math.abs(off) * 7) + "px";
-      var z = Math.round(100 - Math.abs(off));
+      var tx = k * 30;
+      var rot = (k * 3).toFixed(1);
+      var z = remaining.length - k;
+      var base = "translate(" + tx + "px, 0) rotate(" + rot + "deg)";
       return (
-        '<div class="fan-item" data-fan-x="' + tx + '" data-fan-y="' + ty + '" data-fan-rot="' + rot + '" style="z-index:' + z + '">' +
+        '<div class="stack-item' + (k === 0 ? ' stack-item--front' : '') + '" data-base-transform="' + base + '" style="transform:' + base + '; z-index:' + z + ';">' +
           cardFaceHTML(card, isMine, "sm") +
         '</div>'
       );
     }).join("");
+    return (
+      '<div class="stage stack-stage" id="stageEl">' +
+        '<div class="stage-flash"></div>' +
+        '<div class="pack-progress">Pack ' + (ab.currentPackIndex + 1) + ' · card ' + (pack.revealedCount + 1) + ' of ' + pack.cards.length + '</div>' +
+        '<div class="stack-wrap" id="stackWrap" style="width:' + wrapWidth + 'px;">' + items + '</div>' +
+        '<button class="btn btn-primary" id="nextCardBtn">Next Card ↑</button>' +
+        '<p class="stack-hint">Swipe up on the top card, or tap the button.</p>' +
+      '</div>'
+    );
+  }
+
+  function packDoneHTML(ab, pack) {
+    var wholeBox = ab.yourTeam === null;
+    var kept = pack.cards.filter(function (c) { return wholeBox || c.team === ab.yourTeam; });
+    var keptValue = kept.reduce(function (s, c) { return s + c.value; }, 0);
     var recapLine = wholeBox ? "Every card is yours." : kept.length + " of " + pack.cards.length + " matched " + ab.yourTeam + ".";
     return (
-      '<div class="stage fan-stage" id="stageEl">' +
+      '<div class="stage" id="stageEl">' +
         '<div class="stage-flash"></div>' +
         '<h3 class="pack-intro-title">Pack ' + (ab.currentPackIndex + 1) + ' Complete</h3>' +
-        megaHTML +
-        '<div class="fan-wrap" id="fanWrap">' + items + '</div>' +
-        '<div class="fan-value">' + recapLine + ' Value <span class="fan-value__amt">' + money(keptValue) + '</span></div>' +
+        '<p class="pack-intro-sub">' + recapLine + ' Value <strong>' + money(keptValue) + '</strong></p>' +
         '<button class="btn btn-primary" id="backToPacksBtn">Back to Packs</button>' +
       '</div>'
     );
@@ -564,19 +573,23 @@
 
   function packRipHTML(ab) {
     var pack = ab.packs[ab.currentPackIndex];
-    if (pack.revealedCount >= pack.cards.length) return fanRevealHTML(ab, pack);
-    return packIntroHTML(ab);
+    if (pack.revealedCount >= pack.cards.length) return packDoneHTML(ab, pack);
+    if (!pack.torn) return packIntroHTML(ab);
+    return packStackHTML(ab, pack);
   }
 
-  // Staggers each fanned card from a hidden stack into its resting position/rotation.
-  function animateFanIn(root) {
-    var items = root.querySelectorAll(".fan-item");
-    items.forEach(function (item, i) {
-      later(function () {
-        item.style.transform = "translate(" + item.dataset.fanX + ", " + item.dataset.fanY + ") rotate(" + item.dataset.fanRot + ")";
-        item.style.opacity = "1";
-      }, REDUCE_MOTION ? 0 : i * 90);
-    });
+  // Fires the mega-hit burst once per card, the moment it first becomes the front of the
+  // stack (not on every re-render for unrelated reasons, and not again on repeat renders).
+  var burstedCardId = null;
+  function maybeBurstFrontCard(ab) {
+    if (!ab || ab.currentPackIndex === null) return;
+    var pack = ab.packs[ab.currentPackIndex];
+    if (!pack || !pack.torn) return;
+    var front = pack.cards[pack.revealedCount];
+    if (!front || front.value < 1000 || burstedCardId === front.id) return;
+    burstedCardId = front.id;
+    var stageEl = document.getElementById("stageEl");
+    if (stageEl) { spawnConfetti(stageEl, 42, "#ffd54a", true); triggerFlash(stageEl, true); }
   }
 
   function renderLive() {
@@ -649,7 +662,7 @@
       mainHTML +
       historyHTML;
 
-    if (document.getElementById("fanWrap")) animateFanIn(content);
+    if (document.getElementById("stackWrap")) maybeBurstFrontCard(ab);
   }
 
   function renderCollection() {
@@ -765,6 +778,7 @@
       packs: generatePacks(f, boxCount),
       currentPackIndex: null
     };
+    burstedCardId = null;
     closeModal();
     switchTab("live");
     renderAll();
@@ -812,24 +826,33 @@
         if (wholeBox || card.team === ab.yourTeam) state.collection.push(card);
       }
       pack.revealedCount = pack.cards.length;
+      pack.torn = true;
     });
     ab.currentPackIndex = null;
     renderAll();
   }
 
-  // Reveals every card in a torn pack at once (fan) and collects the matching ones.
-  // Returns true if the pack contains a $1,000+ mega hit, so the caller can fire the
-  // one-time celebration burst once the fan has finished settling into place.
-  function collectPack(pack, ab) {
-    var wholeBox = ab.yourTeam === null;
-    var hasMega = false;
-    for (var i = 0; i < pack.cards.length; i++) {
-      var card = pack.cards[i];
-      if (card.value >= 1000) hasMega = true;
-      if (wholeBox || card.team === ab.yourTeam) state.collection.push(card);
+  // Takes the front card off the stack: animates it flying up and away, then collects it
+  // and reveals whatever was peeking behind it as the new front card.
+  function advanceStack() {
+    var ab = state.activeBreak;
+    if (!ab || ab.currentPackIndex === null) return;
+    var pack = ab.packs[ab.currentPackIndex];
+    if (!pack || !pack.torn || pack.revealedCount >= pack.cards.length) return;
+    var card = pack.cards[pack.revealedCount];
+    var isMine = ab.yourTeam === null || card.team === ab.yourTeam;
+    var frontEl = document.querySelector(".stack-item--front");
+    if (frontEl) {
+      frontEl.style.pointerEvents = "none";
+      frontEl.style.transition = "transform .3s cubic-bezier(.3,.6,.4,1), opacity .26s ease-in";
+      frontEl.style.transform = (frontEl.dataset.baseTransform || "") + " translateY(-240px) rotate(-16deg)";
+      frontEl.style.opacity = "0";
     }
-    pack.revealedCount = pack.cards.length;
-    return hasMega;
+    later(function () {
+      if (isMine) state.collection.push(card);
+      pack.revealedCount += 1;
+      renderAll();
+    }, REDUCE_MOTION ? 20 : 300);
   }
 
   document.getElementById("liveContent").addEventListener("click", function (e) {
@@ -854,20 +877,12 @@
       later(function () {
         var abNow = state.activeBreak;
         if (!abNow) return;
-        var pack = abNow.packs[abNow.currentPackIndex];
-        var hasMega = collectPack(pack, abNow);
+        abNow.packs[abNow.currentPackIndex].torn = true;
         renderAll();
-        if (hasMega) {
-          later(function () {
-            var fanStage = document.getElementById("stageEl");
-            if (!fanStage) return;
-            spawnConfetti(fanStage, 42, "#ffd54a", true);
-            triggerFlash(fanStage, true);
-          }, (REDUCE_MOTION ? 0 : pack.cards.length * 90) + 350);
-        }
       }, 620);
       return;
     }
+    if (e.target.closest("#nextCardBtn")) { advanceStack(); return; }
     if (e.target.closest("#instantRipBoxBtn")) { instantRipBox(); return; }
     if (e.target.closest("#backToPacksBtn")) {
       if (state.activeBreak) state.activeBreak.currentPackIndex = null;
@@ -881,6 +896,38 @@
       return;
     }
   });
+
+  // Swipe the front card of the stack up to take it, same action as the button.
+  (function attachStackSwipe(container) {
+    var drag = null;
+    container.addEventListener("pointerdown", function (e) {
+      var front = e.target.closest(".stack-item--front");
+      if (!front) return;
+      drag = { el: front, startX: e.clientX, startY: e.clientY, base: front.dataset.baseTransform || "" };
+      if (front.setPointerCapture) { try { front.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } }
+    });
+    container.addEventListener("pointermove", function (e) {
+      if (!drag) return;
+      var dx = (e.clientX - drag.startX) * 0.25;
+      var dy = Math.min(0, e.clientY - drag.startY);
+      drag.el.style.transition = "none";
+      drag.el.style.transform = drag.base + " translate(" + dx + "px," + dy + "px)";
+    });
+    function endDrag(e) {
+      if (!drag) return;
+      var dy = e.clientY - drag.startY;
+      var el = drag.el, base = drag.base;
+      drag = null;
+      if (dy < -55) {
+        advanceStack();
+      } else {
+        el.style.transition = "transform .2s ease-out";
+        el.style.transform = base;
+      }
+    }
+    container.addEventListener("pointerup", endDrag);
+    container.addEventListener("pointercancel", endDrag);
+  })(document.getElementById("liveContent"));
 
   // Holographic tilt + glare: the card leans toward the pointer and a light sweep tracks
   // it, like tilting a real refractor under a lamp. Works for touch too since pointer

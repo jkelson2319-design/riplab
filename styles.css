@@ -419,18 +419,18 @@ select {
 .pack-tile__status { font-size: 10.5px; color: var(--text-muted); }
 .pack-tile.opened .pack-tile__status { color: var(--accent-2); }
 
-/* Fan reveal — every card in a torn pack, spread like a hand of cards. Each .fan-item
-   starts hidden/stacked (see base rule) and animates to its data-fan-x/y/rot resting
-   transform, staggered per card by app.js (animateFanIn). */
-.fan-wrap { position: relative; height: 220px; width: 100%; max-width: 480px; margin: 6px 0 22px; }
-.fan-item {
-  position: absolute; left: 50%; top: 0; width: 112px; margin-left: -56px; aspect-ratio: 3/4;
-  transform: translate(0, 60px) rotate(0deg); opacity: 0;
-  transition: transform .55s cubic-bezier(.22,.9,.32,1.1), opacity .4s ease-out;
+/* Card stack — the front card (leftmost, on top) is fully visible; the rest of the pack
+   peeks out behind/to its right just enough to hint at color (refractor sheen, gold
+   autograph, etc). Swiping or tapping the front card takes it and promotes the next. */
+.pack-progress { font-size: 12px; color: #97a29c; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
+.stack-wrap { position: relative; height: 210px; margin: 4px auto 18px; }
+.stack-item {
+  position: absolute; left: 0; top: 0; width: 118px; aspect-ratio: 3/4;
+  transition: transform .3s ease, opacity .3s ease;
 }
-.fan-mega-callout { font-weight: 700; font-size: 15px; margin: 2px 0 10px; }
-.fan-value { font-size: 14px; color: #97a29c; margin-bottom: 18px; }
-.fan-value__amt { color: #fff; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 16px; }
+.stack-item--front { cursor: grab; touch-action: none; }
+.stack-item--front:active { cursor: grabbing; }
+.stack-hint { font-size: 12px; color: #97a29c; margin: 10px 0 0; }
 
 /* Any $1,000+ card gets a permanent pulsing glow, everywhere its face is shown. */
 .card-face.mega-hit { animation: megaPulse 1s ease-in-out infinite alternate; }
