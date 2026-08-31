@@ -739,25 +739,16 @@
       return;
     }
 
-    var rows = coll.map(function (c) {
-      var badge = cardBadge(c);
+    var tiles = coll.map(function (c) {
       return (
-        '<tr>' +
-          '<td><span class="rarity-dot" style="background:' + badge.color + '"></span>' + badge.label + '</td>' +
-          '<td>' + c.player + (c.tag ? ' <span class="section-sub">· ' + c.tag + '</span>' : '') + '</td>' +
-          '<td>' + (c.pos || "") + '</td>' +
-          '<td>' + c.team + '</td>' +
-          '<td class="num mono">' + money(c.value) + '</td>' +
-          '<td><button class="btn" data-sell="' + c.id + '">Sell</button></td>' +
-        '</tr>'
+        '<div class="collection-card">' +
+          '<div class="collection-card__face">' + cardFaceHTML(c, true, "sm") + '</div>' +
+          '<button class="btn collection-card__sell" data-sell="' + c.id + '">Sell</button>' +
+        '</div>'
       );
     }).join("");
 
-    content.innerHTML =
-      '<div class="table-wrap"><table>' +
-        '<thead><tr><th>Rarity</th><th>Player</th><th>Pos</th><th>Team</th><th>Value</th><th></th></tr></thead>' +
-        '<tbody>' + rows + '</tbody>' +
-      '</table></div>';
+    content.innerHTML = '<div class="collection-grid">' + tiles + '</div>';
   }
 
   function renderAll() {

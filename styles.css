@@ -485,13 +485,15 @@ select {
 
 /* Collection */
 .collection-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
-.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
-table { width: 100%; border-collapse: collapse; min-width: 560px; }
-th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
-th { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); background: var(--surface-2); }
-tr:last-child td { border-bottom: none; }
-td.num { font-family: 'JetBrains Mono', monospace; text-align: right; }
 .rarity-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+
+/* Collection grid — shows each card's actual face instead of a plain data row. Fixed
+   tile size (not aspect-ratio on a flex/grid child) avoids the same content-driven
+   sizing bug fixed for .history-thumb. */
+.collection-grid { display: grid; grid-template-columns: repeat(auto-fill, 130px); justify-content: start; gap: 18px 14px; }
+.collection-card { display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+.collection-card__face { width: 130px; height: 174px; }
+.collection-card__sell { font-size: 12px; padding: 6px 0; width: 100%; }
 
 .toast {
   position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px);
