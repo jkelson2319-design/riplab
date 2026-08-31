@@ -451,7 +451,46 @@
     }).join("");
   }
 
-  // What the top-center pill shows: BASE for filler cards, otherwise the hit category.
+  // QBs get a real photo-based card template instead of the generic silhouette layout.
+  // The same photo is reused for every QB; a CSS filter retints it per parallel tier so
+  // rarity is still visible at a glance without needing a separate image per color.
+  var QB_CARD_IMAGE = "images/qb-chrome.jpg";
+  var QB_IMAGE_FILTER = {
+    "Rookie Refractor": "sepia(.25) saturate(1.3) hue-rotate(-8deg)",
+    "Green Refractor": "hue-rotate(100deg) saturate(1.4)",
+    "Blue Refractor": "hue-rotate(190deg) saturate(1.3)",
+    "Orange Refractor": "hue-rotate(-40deg) saturate(1.5) brightness(1.05)",
+    "Gold Refractor": "sepia(.5) saturate(1.8) hue-rotate(-12deg) brightness(1.05)",
+    "Red Refractor": "hue-rotate(300deg) saturate(1.6)",
+    "Black Refractor": "grayscale(.7) brightness(.65) contrast(1.25)",
+    "Superfractor 1/1": "saturate(2.2) contrast(1.15) brightness(1.05)",
+    "Case Hit": "hue-rotate(250deg) saturate(1.5) brightness(.9)"
+  };
+  function qbImageFilter(tag) {
+    if (!tag) return "";
+    if (tag === "Case Hit") return QB_IMAGE_FILTER["Case Hit"];
+    var key = tierValueKey(tag);
+    return (key && QB_IMAGE_FILTER[key]) || "";
+  }
+  function qbCardInnerHTML(card, isMine) {
+    var badge = cardBadge(card);
+    var filter = qbImageFilter(card.tag);
+    var tagLabel = card.tag ? (card.tag.indexOf("Autograph") !== -1 ? "✎ " : "") + card.tag : badge.label;
+    return (
+      '<div class="qb-card__imgwrap">' +
+        '<img class="qb-card__img" src="' + QB_CARD_IMAGE + '" alt=""' + (filter ? ' style="filter:' + filter + '"' : '') + '>' +
+        '<div class="qb-card__plate">' +
+          '<div class="qb-card__team' + (isMine ? ' mine' : '') + '">' + card.team + '</div>' +
+          '<div class="qb-card__player">' + card.player + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="qb-card__footer">' +
+        '<span class="rarity-tag" style="background:' + badge.color + '">' + tagLabel + '</span>' +
+        '<span class="value mono">' + money(card.value) + '</span>' +
+      '</div>'
+    );
+  }
+
   function cardBadge(card) {
     if (!card.tag) return { label: "BASE", color: "var(--surface-2)" };
     if (card.tag === "Case Hit") return { label: "CASE HIT", color: "#8a3fd6" };
@@ -461,11 +500,13 @@
 
   function cardFaceClasses(card, isMine, size) {
     return "card-face" + (size ? " card-face--" + size : "") + (isMine ? " mine" : "") +
+      (card.pos === "QB" ? " qb-card" : "") +
       (card.tag ? " legendary" : "") + (REFRACTOR_COLORS[card.tag] ? " refractor" : "") +
       (card.isMega ? " mega-hit" : "");
   }
 
   function cardInnerHTML(card, isMine) {
+    if (card.pos === "QB") return qbCardInnerHTML(card, isMine);
     var badge = cardBadge(card);
     return (
       '<div class="card-face__topbar">' +
@@ -490,7 +531,7 @@
   }
 
   function cardFaceHTML(card, isMine, size) {
-    var refractorBg = REFRACTOR_COLORS[card.tag];
+    var refractorBg = card.pos === "QB" ? null : REFRACTOR_COLORS[card.tag];
     var styleAttr = refractorBg ? ' style="background:' + refractorBg + '"' : '';
     return '<div class="' + cardFaceClasses(card, isMine, size) + '"' + styleAttr + '>' + cardInnerHTML(card, isMine) + '</div>';
   }
