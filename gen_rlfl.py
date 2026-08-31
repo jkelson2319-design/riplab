@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates rlfl-data.js: RLFL's 32 teams and their 19-player rosters.
+"""Generates rlfl-data.js: RLFL's 10 teams and their 8-player rosters.
 
 Not needed at runtime — rerun this only if you want a different league
 (new team names, new player names, or a different rookie class) and
@@ -26,7 +26,8 @@ MASCOTS = [
 ]
 random.shuffle(CITIES)
 random.shuffle(MASCOTS)
-TEAMS = [CITIES[i] + " " + MASCOTS[i] for i in range(32)]
+NUM_TEAMS = 10
+TEAMS = [CITIES[i] + " " + MASCOTS[i] for i in range(NUM_TEAMS)]
 
 FIRST = [
     "Mace", "Rook", "Deshawn", "Kellen", "Tobias", "Marcus", "Eli", "Jax", "Devon", "Silas",
@@ -51,22 +52,23 @@ LAST = [
 all_names = [f + " " + l for f in FIRST for l in LAST]
 random.shuffle(all_names)
 
-# 2 QB, 3 RB, 4 WR, 2 TE, 3 OL, 5 DEF = 19 per team.
-POSITIONS = (["QB"] * 2) + (["RB"] * 3) + (["WR"] * 4) + (["TE"] * 2) + (["OL"] * 3) + (["DEF"] * 5)
+# 1 QB, 1 RB, 2 WR, 1 TE, 1 OL, 2 DEF = 8 per team.
+POSITIONS = (["QB"] * 1) + (["RB"] * 1) + (["WR"] * 2) + (["TE"] * 1) + (["OL"] * 1) + (["DEF"] * 2)
+ROSTER_SIZE = len(POSITIONS)
 
 name_iter = iter(all_names)
 roster = {}
 for team in TEAMS:
     players = [{"name": next(name_iter), "pos": pos} for pos in POSITIONS]
-    # 3 rookies per team, drawn from anywhere in that team's 19-player roster.
-    for i in random.sample(range(19), 3):
+    # 1 rookie per team, drawn from anywhere in that team's roster.
+    for i in random.sample(range(ROSTER_SIZE), 1):
         players[i]["rookie"] = True
     for p in players:
         p.setdefault("rookie", False)
     roster[team] = players
 
 lines = [
-    "// Auto-generated RLFL (RipLab Football League) data: 32 teams x 19-player rosters.",
+    "// Auto-generated RLFL (RipLab Football League) data: %d teams x %d-player rosters." % (NUM_TEAMS, ROSTER_SIZE),
     "// Regenerate with gen_rlfl.py if you ever want a different league.",
     "var RLFL_TEAMS = [",
 ]

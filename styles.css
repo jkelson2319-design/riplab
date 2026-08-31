@@ -405,7 +405,7 @@ select {
   gap: 10px; margin-bottom: 16px;
 }
 .pack-grid-head h3 { margin: 0; font-size: 22px; }
-.pack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+.pack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; }
 .pack-tile {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
@@ -413,11 +413,26 @@ select {
   transition: transform .12s ease, border-color .12s ease;
 }
 .pack-tile:not(:disabled):hover { transform: translateY(-2px); border-color: var(--accent); }
-.pack-tile:disabled { opacity: .45; cursor: default; }
-.pack-tile__icon { font-size: 26px; }
+.pack-tile:disabled { opacity: .6; cursor: default; }
 .pack-tile__label { font-size: 12px; font-weight: 700; text-align: center; }
 .pack-tile__status { font-size: 10.5px; color: var(--text-muted); }
 .pack-tile.opened .pack-tile__status { color: var(--accent-2); }
+
+/* Mini pack — same brand look as the big 3D pack, scattered at a slight fixed tilt so the
+   grid reads as packs fanned across a table rather than a perfect row of squares. */
+.pack-mini {
+  position: relative; width: 56px; height: 78px; border-radius: 7px; overflow: hidden;
+  background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 55%, var(--accent) 100%);
+  box-shadow: 0 6px 12px rgba(0,0,0,.35);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  color: #141615; transform: rotate(var(--tilt, 0deg)); transition: transform .15s ease;
+}
+.pack-tile:not(:disabled):hover .pack-mini { transform: rotate(0deg) scale(1.06); }
+.pack-mini__seam { position: absolute; left: 8%; right: 8%; top: 50%; height: 1.5px; background: rgba(0,0,0,.3); }
+.pack-mini__brand { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: .03em; line-height: 1; }
+.pack-mini__sub { font-size: 5.5px; font-weight: 700; letter-spacing: .08em; }
+.pack-tile.opened .pack-mini { filter: grayscale(1) brightness(.7); transform: rotate(0deg); box-shadow: none; }
+.pack-tile.opened .pack-mini .pack-mini__brand { font-size: 20px; }
 
 /* Card stack — the front card (leftmost, on top) is fully visible; the rest of the pack
    peeks out behind/to its right just enough to hint at color (refractor sheen, gold

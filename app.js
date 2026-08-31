@@ -26,13 +26,15 @@
     "Superfractor 1/1": "linear-gradient(120deg, #ff2d6e, #ff9900, #f5e642, #33e07a, #29c5ff, #9b5cff, #ff2d6e)",
     "Case Hit":         "linear-gradient(135deg, #050505 0%, #3a1a52 30%, #8a3fd6 50%, #3a1a52 70%, #050505 100%)"
   };
-  // How much each tier multiplies a hit card's baseline (legendary-range) value.
+  // How much each tier multiplies a hit card's baseline value. Kept close to 1x for the
+  // common tiers (a plain Refractor shouldn't be a windfall) so the real payoff is
+  // reserved for the genuinely rare colors.
   var PARALLEL_VALUE_MULT = {
-    "Refractor": 1.3, "Rookie Refractor": 1.8, "Green Refractor": 2.5, "Blue Refractor": 3.5,
-    "Orange Refractor": 5, "Gold Refractor": 8, "Red Refractor": 14, "Black Refractor": 24,
-    "Superfractor 1/1": 60, "Case Hit": 18
+    "Refractor": 1.0, "Rookie Refractor": 1.3, "Green Refractor": 1.8, "Blue Refractor": 2.5,
+    "Orange Refractor": 3.5, "Gold Refractor": 5.5, "Red Refractor": 9, "Black Refractor": 15,
+    "Superfractor 1/1": 40, "Case Hit": 12
   };
-  var AUTOGRAPH_VALUE_MULT = 2.2;
+  var AUTOGRAPH_VALUE_MULT = 1.8;
   // Autograph tag name -> the base color tier it borrows its background/value from ("Base Autograph" has none).
   var AUTOGRAPH_TAG_TO_COLOR_KEY = {
     "Green Refractor Autograph": "Green Refractor", "Blue Refractor Autograph": "Blue Refractor",
@@ -48,9 +50,11 @@
   }
 
   // Flat value range for ordinary base cards (every card that isn't a pack's hit slot).
-  var BASE_CARD_VALUE = [1, 8];
-  // Hit-slot cards always start from this baseline, then scale up by parallel/autograph tier.
-  var HIT_CARD_VALUE = [120, 400];
+  var BASE_CARD_VALUE = [1, 6];
+  // Hit-slot cards start close to a base card's own range, then scale up by parallel/
+  // autograph tier — a plain Refractor is only a little better than a good base card;
+  // the rare colors are where the real money is.
+  var HIT_CARD_VALUE = [2, 8];
 
   var PRODUCT_NAME = "RLFL Debut Chrome";
 
@@ -88,27 +92,27 @@
     {
       id: "retail", tier: "RETAIL", name: "Retail",
       boxPrice: 40, casePrice: 800, boxesPerCase: 20,
-      packsPerBox: 8, cardsPerPack: 6, cardsPerBox: 48,
+      packsPerBox: 4, cardsPerPack: 4, cardsPerBox: 16,
       blurb: "The cheapest way in. Mostly base cards, but every chase card — up to a 1/1 — is still in the pool.",
-      valueScale: 1, guaranteedAutographs: 0,
+      valueScale: 0.57, guaranteedAutographs: 0,
       caseHitP: 1 / 150, baseAutoP: 1 / 100, colorAutoP: 1 / 400,
       packOdds: { refractor: 3, rookieRefractor: 8, green: 16, blue: 35, orange: 70, gold: 140, red: 350, black: 700, superfractor: 3500 }
     },
     {
       id: "hobby", tier: "HOBBY", name: "Hobby",
       boxPrice: 250, casePrice: 3000, boxesPerCase: 12,
-      packsPerBox: 12, cardsPerPack: 6, cardsPerBox: 72,
+      packsPerBox: 6, cardsPerPack: 5, cardsPerBox: 30,
       blurb: "The main premium format — noticeably better refractor and autograph odds, one autograph guaranteed.",
-      valueScale: 2.5, guaranteedAutographs: 1,
+      valueScale: 1.92, guaranteedAutographs: 1,
       caseHitP: 1 / 96, baseAutoP: 1 / 60, colorAutoP: 1 / 70,
       packOdds: { refractor: 2, rookieRefractor: 5, green: 8, blue: 18, orange: 35, gold: 70, red: 175, black: 350, superfractor: 1750 }
     },
     {
       id: "jumbo", tier: "JUMBO", name: "Jumbo Hobby",
       boxPrice: 600, casePrice: 4800, boxesPerCase: 8,
-      packsPerBox: 16, cardsPerPack: 8, cardsPerBox: 128,
+      packsPerBox: 8, cardsPerPack: 6, cardsPerBox: 48,
       blurb: "The most loaded format on the shelf — a refractor in every pack and two autographs guaranteed.",
-      valueScale: 5, guaranteedAutographs: 2,
+      valueScale: 2.72, guaranteedAutographs: 2,
       caseHitP: 1 / 60, baseAutoP: 1 / 40, colorAutoP: 1 / 35,
       packOdds: { refractor: 1, rookieRefractor: 3, green: 5, blue: 10, orange: 20, gold: 40, red: 100, black: 200, superfractor: 1000 }
     }
@@ -116,10 +120,16 @@
   FORMATS.forEach(function (f) {
     f.parallelLadder = buildLadder(f.packOdds);
     f.autoColorLadder = autoColorLadder(f.parallelLadder, f.colorAutoP);
+    // "Mega hit" scales with the format instead of a fixed dollar figure — a Retail box
+    // should still be able to produce its own jaw-dropping moment even though its dollar
+    // values run far lower than Jumbo's.
+    f.megaThreshold = f.boxPrice * 2;
   });
 
-  // Skill-position hierarchy: QBs command the most, linemen the least.
-  var POSITION_VALUE_MULT = { QB: 2.0, WR: 1.6, RB: 1.3, TE: 1.1, DEF: 0.9, OL: 0.6 };
+  // Skill-position hierarchy: QBs command the most. Linemen and defense are much less
+  // collectible, so even a nice-tier hit on an OL card stays modest — the color/rarity
+  // makes it a notable pull, but not a payday.
+  var POSITION_VALUE_MULT = { QB: 2.2, WR: 1.6, RB: 1.2, TE: 0.9, DEF: 0.5, OL: 0.2 };
 
   var STORAGE_KEY = "break-room-save-v1";
   var state = loadState();
@@ -156,9 +166,10 @@
     var scale = format.valueScale * posMult;
     var lo = Math.max(1, Math.round(BASE_CARD_VALUE[0] * scale));
     var hi = Math.max(lo, Math.round(BASE_CARD_VALUE[1] * scale));
+    var value = rand(lo, hi);
     return {
       id: uid(), team: team, player: player.name, pos: player.pos,
-      isRookie: !!player.rookie, tag: null, value: rand(lo, hi)
+      isRookie: !!player.rookie, tag: null, value: value, isMega: value >= format.megaThreshold
     };
   }
 
@@ -182,9 +193,10 @@
     var mult = format.valueScale * posMult * colorMult * (isAutograph ? AUTOGRAPH_VALUE_MULT : 1);
     var lo = Math.max(1, Math.round(HIT_CARD_VALUE[0] * mult));
     var hi = Math.max(lo, Math.round(HIT_CARD_VALUE[1] * mult));
+    var value = rand(lo, hi);
     return {
       id: uid(), team: team, player: player.name, pos: player.pos,
-      isRookie: !!player.rookie, tag: tag, value: rand(lo, hi)
+      isRookie: !!player.rookie, tag: tag, value: value, isMega: value >= format.megaThreshold
     };
   }
 
@@ -450,7 +462,7 @@
   function cardFaceClasses(card, isMine, size) {
     return "card-face" + (size ? " card-face--" + size : "") + (isMine ? " mine" : "") +
       (card.tag ? " legendary" : "") + (REFRACTOR_COLORS[card.tag] ? " refractor" : "") +
-      (card.value >= 1000 ? " mega-hit" : "");
+      (card.isMega ? " mega-hit" : "");
   }
 
   function cardInnerHTML(card, isMine) {
@@ -483,6 +495,9 @@
     return '<div class="' + cardFaceClasses(card, isMine, size) + '"' + styleAttr + '>' + cardInnerHTML(card, isMine) + '</div>';
   }
 
+  // Small deterministic tilt per index so the grid reads as packs scattered/fanned across
+  // a table rather than a perfect grid — same angle every render, no jitter on re-render.
+  var PACK_TILT_STEPS = [-7, -3, 0, 3, 7];
   function packGridHTML(ab, format) {
     var tiles = ab.packs.map(function (p, i) {
       var done = p.revealedCount >= p.cards.length;
@@ -490,9 +505,15 @@
       var label = multiBox
         ? "Box " + (Math.floor(i / format.packsPerBox) + 1) + " · Pack " + ((i % format.packsPerBox) + 1)
         : "Pack " + (i + 1);
+      var tilt = PACK_TILT_STEPS[i % PACK_TILT_STEPS.length];
       return (
         '<button class="pack-tile' + (done ? ' opened' : '') + '" data-pack="' + i + '"' + (done ? ' disabled' : '') + '>' +
-          '<span class="pack-tile__icon">' + (done ? "📭" : "📦") + '</span>' +
+          '<div class="pack-mini" style="--tilt:' + tilt + 'deg">' +
+            '<div class="pack-mini__seam"></div>' +
+            (done
+              ? '<span class="pack-mini__brand">✓</span>'
+              : '<span class="pack-mini__brand">RLFL</span><span class="pack-mini__sub">CHROME</span>') +
+          '</div>' +
           '<span class="pack-tile__label">' + label + '</span>' +
           '<span class="pack-tile__status">' + (done ? "Opened" : p.cards.length + " cards") + '</span>' +
         '</button>'
@@ -586,7 +607,7 @@
     var pack = ab.packs[ab.currentPackIndex];
     if (!pack || !pack.torn) return;
     var front = pack.cards[pack.revealedCount];
-    if (!front || front.value < 1000 || burstedCardId === front.id) return;
+    if (!front || !front.isMega || burstedCardId === front.id) return;
     burstedCardId = front.id;
     var stageEl = document.getElementById("stageEl");
     if (stageEl) { spawnConfetti(stageEl, 42, "#ffd54a", true); triggerFlash(stageEl, true); }
