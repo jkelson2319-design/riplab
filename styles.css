@@ -226,8 +226,7 @@ select {
    catching a lamp. At rest the vars default to 0deg/50% so nothing moves until touched. */
 .card-face {
   --tiltX: 0deg; --tiltY: 0deg; --glareX: 50%; --glareY: 50%;
-  position: relative; overflow: hidden;
-  border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
+  position: relative; overflow: hidden; border-radius: 10px;
   display: flex; flex-direction: column; justify-content: space-between;
   padding: 12px; height: 100%;
   transform: perspective(700px) rotateX(var(--tiltX)) rotateY(var(--tiltY));
