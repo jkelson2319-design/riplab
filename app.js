@@ -550,9 +550,7 @@
     return (key && QB_IMAGE_FILTER[key]) || "";
   }
   function qbCardInnerHTML(card, isMine) {
-    var badge = cardBadge(card);
     var art = qbArtFor(card);
-    var tagLabel = card.tag ? (card.tag.indexOf("Autograph") !== -1 ? "✎ " : "") + card.tag : badge.label;
     return (
       '<div class="qb-card__imgwrap' + (art.selfContained ? ' qb-card__imgwrap--contain' : '') + '">' +
         '<img class="qb-card__img" src="' + art.src + '" alt=""' + (art.filter ? ' style="filter:' + art.filter + '"' : '') + '>' +
@@ -562,10 +560,6 @@
             '<div class="qb-card__player">' + card.player + '</div>' +
           '</div>'
         ) +
-      '</div>' +
-      '<div class="qb-card__footer">' +
-        '<span class="rarity-tag" style="background:' + badge.color + '">' + tagLabel + '</span>' +
-        '<span class="value mono">' + money(card.value) + '</span>' +
       '</div>'
     );
   }
@@ -575,6 +569,13 @@
     if (card.tag === "Case Hit") return { label: "CASE HIT", color: "#8a3fd6" };
     if (card.tag.indexOf("Autograph") !== -1) return { label: "AUTOGRAPH", color: "#d4af37" };
     return { label: "PARALLEL", color: "var(--accent)" };
+  }
+  // The specific parallel/chase name shown to the player — "Green Refractor", "Case Hit",
+  // "Refractor Autograph" — as opposed to cardBadge's generic bucket label, which is only
+  // used to pick a badge/pill color.
+  function cardTagLabel(card) {
+    if (!card.tag) return "BASE";
+    return (card.tag.indexOf("Autograph") !== -1 ? "✎ " : "") + card.tag;
   }
 
   function cardFaceClasses(card, isMine, size) {
@@ -586,11 +587,9 @@
 
   function cardInnerHTML(card, isMine) {
     if (card.pos === "QB") return qbCardInnerHTML(card, isMine);
-    var badge = cardBadge(card);
     return (
       '<div class="card-face__topbar">' +
         '<span class="rlfl-crest">RLFL</span>' +
-        '<span class="rarity-tag" style="background:' + badge.color + '">' + badge.label + '</span>' +
         (card.isRookie ? '<span class="rc-crest">RC</span>' : '<span class="crest-spacer"></span>') +
       '</div>' +
       '<div class="pos-silhouette">' + positionSilhouette(card.pos) + '</div>' +
@@ -598,21 +597,37 @@
         '<div class="card-face__nameblock">' +
           '<div class="team">' + card.team + '</div>' +
           '<div class="player">' + card.player + (card.pos ? ' <span class="pos-tag">' + card.pos + '</span>' : '') + '</div>' +
-          (card.tag ? '<div class="cardtag">' + (card.tag.indexOf("Autograph") !== -1 ? "✎ " : "") + card.tag + '</div>' : '') +
         '</div>' +
         teamCrestHTML(card.team) +
-      '</div>' +
-      '<div class="card-face__valuerow">' +
-        (isMine ? '<span class="mine-flag">YOURS</span>' : '<span></span>') +
-        '<span class="value mono">' + money(card.value) + '</span>' +
       '</div>'
     );
   }
 
+  // The card box itself — just the art/identity, no rarity or price on it.
   function cardFaceHTML(card, isMine, size) {
     var refractorBg = card.pos === "QB" ? null : REFRACTOR_COLORS[card.tag];
     var styleAttr = refractorBg ? ' style="background:' + refractorBg + '"' : '';
     return '<div class="' + cardFaceClasses(card, isMine, size) + '"' + styleAttr + '>' + cardInnerHTML(card, isMine) + '</div>';
+  }
+
+  // The parallel name + price, kept fully outside the card's bordered box so they read as
+  // plain info about the card rather than overlay text competing with its art.
+  function cardCaptionHTML(card) {
+    var badge = cardBadge(card);
+    return (
+      '<div class="card-caption">' +
+        '<span class="card-caption__tag rarity-tag" style="background:' + badge.color + '">' + cardTagLabel(card) + '</span>' +
+        '<span class="card-caption__value value mono">' + money(card.value) + '</span>' +
+      '</div>'
+    );
+  }
+
+  // Box + caption together. `frameVariant` adds a "card-frame--X" modifier class for
+  // context-specific sizing (e.g. the big pull reveal vs. a small collection tile).
+  function cardWithCaptionHTML(card, isMine, size, frameVariant) {
+    return '<div class="card-frame' + (frameVariant ? " card-frame--" + frameVariant : "") + '">' +
+      cardFaceHTML(card, isMine, size) + cardCaptionHTML(card) +
+    '</div>';
   }
 
   // Small deterministic tilt per index so the grid reads as packs scattered/fanned across
@@ -666,23 +681,31 @@
     );
   }
 
+  // The pull reveal is meant to be the biggest moment in the app, so the front card is
+  // sized well above every other card display; peeks behind it use a much smaller offset
+  // than the card's own size so a full pack (up to 6 cards) never overflows a phone screen.
+  var STACK_FRONT_WIDTH = 220;
+  var STACK_PEEK_OFFSET = 16;
+
   // A stacked deck: the current card sits fully visible at front (left), the rest of the
   // pack peeks out behind/to the right just enough to hint at its color (so a refractor
   // sheen or autograph gold is visible before you get to it). Swiping the front card up
-  // (or tapping the button) takes it and reveals the next one.
+  // (or tapping the button) takes it and reveals the next one. Only the front card gets a
+  // caption (parallel + price) — peeking cards stay a mystery until they're revealed.
   function packStackHTML(ab, pack) {
     var wholeBox = ab.yourTeam === null;
     var remaining = pack.cards.slice(pack.revealedCount);
-    var wrapWidth = 118 + Math.max(0, remaining.length - 1) * 30;
+    var wrapWidth = STACK_FRONT_WIDTH + Math.max(0, remaining.length - 1) * STACK_PEEK_OFFSET;
     var items = remaining.map(function (card, k) {
       var isMine = wholeBox || card.team === ab.yourTeam;
-      var tx = k * 30;
-      var rot = (k * 3).toFixed(1);
+      var tx = k * STACK_PEEK_OFFSET;
+      var rot = (k * 2).toFixed(1);
       var z = remaining.length - k;
       var base = "translate(" + tx + "px, 0) rotate(" + rot + "deg)";
+      var inner = k === 0 ? cardWithCaptionHTML(card, isMine, null, "stack") : cardFaceHTML(card, isMine);
       return (
         '<div class="stack-item' + (k === 0 ? ' stack-item--front' : '') + '" data-base-transform="' + base + '" style="transform:' + base + '; z-index:' + z + ';">' +
-          cardFaceHTML(card, isMine, "sm") +
+          inner +
         '</div>'
       );
     }).join("");
@@ -767,7 +790,7 @@
         '<div class="history-label">Pulled so far (' + revealed + ' / ' + total + ')</div>' +
         '<div class="history-strip">' +
           seen.map(function (card) {
-            return '<div class="history-thumb">' + cardFaceHTML(card, wholeBox || card.team === ab.yourTeam, "sm") + '</div>';
+            return '<div class="history-thumb">' + cardWithCaptionHTML(card, wholeBox || card.team === ab.yourTeam, "sm", "thumb") + '</div>';
           }).join("") +
         '</div>';
     }
@@ -821,7 +844,7 @@
     var tiles = coll.map(function (c) {
       return (
         '<div class="collection-card">' +
-          '<div class="collection-card__face">' + cardFaceHTML(c, true, "sm") + '</div>' +
+          cardWithCaptionHTML(c, true, "sm", "grid") +
           '<button class="btn collection-card__sell" data-sell="' + c.id + '">Sell</button>' +
         '</div>'
       );

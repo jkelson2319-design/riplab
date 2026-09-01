@@ -245,13 +245,11 @@ select {
 .card-face.legendary { box-shadow: var(--glow-legendary), inset 0 0 0 2px var(--rarity-legendary); }
 
 /* QB photo template — the art already prints the RLFL/Rookie logos, the position, and a
-   name plate built in, so the player/team overlay slots into that space. Rarity + price
-   live in a solid footer strip below the photo instead of floating on top of it, so
-   they stay legible against the busy holographic art. Percentages are tuned against the
-   525x700 source, cropped from the bottom (object-position: top) to make room for the
-   footer without disturbing the logos at the top of the card. */
-.card-face.qb-card { padding: 0; flex-direction: column; justify-content: flex-start; }
-.qb-card__imgwrap { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+   name plate built in, so the player/team overlay slots into that space. The photo now
+   fills the entire box edge to edge — rarity and price live in .card-caption, fully
+   outside the box (see below), not squeezed into a footer inside it. */
+.card-face.qb-card { padding: 0; }
+.qb-card__imgwrap { position: relative; width: 100%; height: 100%; overflow: hidden; }
 .qb-card__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
 /* Self-contained per-player art already has its own border, logos, and name plate baked
    in — "cover" would crop those out, so show the whole image letterboxed instead. */
@@ -264,15 +262,9 @@ select {
 .qb-card__team { font-size: 7px; font-weight: 700; color: #5c655e; text-transform: uppercase; letter-spacing: .02em; }
 .qb-card__team.mine { color: #1f8a76; }
 .qb-card__player { font-size: 9px; font-weight: 800; color: #14161c; }
-.qb-card__footer {
-  flex: 0 0 auto; position: relative; z-index: 2;
-  display: flex; align-items: center; justify-content: space-between; gap: 4px;
-  padding: 3px 6px; background: var(--surface);
-}
-.qb-card__footer .rarity-tag { font-size: 7px; padding: 1px 5px; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.qb-card__footer .value { font-size: 9px; }
 
-/* Top bar: league crest (left) · rarity (center) · rookie crest (right, if any) */
+/* Top bar: league crest (left) · rookie crest (right, if any) — the box now only carries
+   art + authenticity marks; rarity and price live outside it in .card-caption. */
 .card-face__topbar { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 4px; }
 .rlfl-crest, .rc-crest, .crest-spacer {
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
@@ -301,7 +293,6 @@ select {
 .card-face__nameblock { min-width: 0; }
 .card-face .team { font-size: 12px; color: var(--text-muted); }
 .card-face .player { font-size: 14px; font-weight: 700; line-height: 1.25; }
-.card-face .cardtag { font-size: 10.5px; color: var(--accent); font-weight: 600; }
 .pos-tag {
   font-size: 9.5px; font-weight: 700; color: var(--text-muted); letter-spacing: .04em;
   border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; vertical-align: middle;
@@ -312,27 +303,46 @@ select {
   letter-spacing: .02em;
 }
 
-.card-face__valuerow { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; }
-.card-face .value { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 14px; }
-.card-face .mine-flag { font-size: 9.5px; color: var(--accent-2); font-weight: 700; letter-spacing: .08em; }
-
 .card-face--sm .team-crest { width: 15px; height: 15px; font-size: 6.5px; }
 .card-face--sm .rlfl-crest, .card-face--sm .rc-crest, .card-face--sm .crest-spacer { font-size: 6px; padding: 1px 3px; min-width: 12px; }
 .card-face--sm .player { font-size: 11.5px; }
 .card-face--sm .team { font-size: 10.5px; }
-.card-face--sm .value { font-size: 12px; }
-.card-face--sm .rarity-tag { font-size: 9px; padding: 2px 6px; }
 
 /* Color-parallel refractors: metallic gradient background with a slow shimmer */
 .card-face.refractor { background-size: 220% 220%; animation: refractorShine 4s ease-in-out infinite; }
 .card-face.refractor .team,
 .card-face.refractor .player,
-.card-face.refractor .cardtag,
-.card-face.refractor .value,
 .card-face.refractor .pos-tag { color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.75); }
 .card-face.refractor .pos-tag { border-color: rgba(255,255,255,.5); }
 .card-face.refractor .pos-silhouette { color: #fff; opacity: .3; }
 @keyframes refractorShine { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+/* Card frame — the bordered box (art + identity only) plus a caption below it, kept
+   fully separate from the box so the parallel name and price read as plain info about
+   the card rather than overlay text competing with its art. Sizing is fixed pixels per
+   context (never aspect-ratio on a flex child — see .history-thumb below for why) so
+   every tile in a given context is identically sized. */
+.card-frame { display: flex; flex-direction: column; }
+.card-caption { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
+.card-caption__tag { max-width: 65%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-caption__value { font-weight: 700; }
+
+/* Small tiles (history strip, collection grid): compact box + compact caption. */
+.card-frame--thumb .card-face { height: 123px; }
+.card-frame--grid .card-face { height: 174px; }
+.card-frame--thumb .card-caption,
+.card-frame--grid .card-caption { margin-top: 6px; }
+.card-frame--thumb .card-caption__tag,
+.card-frame--grid .card-caption__tag { font-size: 9px; padding: 2px 6px; }
+.card-frame--thumb .card-caption__value,
+.card-frame--grid .card-caption__value { font-size: 12px; }
+
+/* The pull reveal — the biggest card display in the app on purpose, so the info below it
+   (parallel + price) is sized to match rather than reading as an afterthought. */
+.card-frame--stack .card-face { height: 293px; }
+.card-frame--stack .card-caption { margin-top: 12px; }
+.card-frame--stack .card-caption__tag { font-size: 13px; padding: 4px 10px; }
+.card-frame--stack .card-caption__value { font-size: 20px; }
 
 /* Breaker stage — deliberately dark regardless of site theme, like a spotlit table,
    not a page section. Text/buttons inside get their own light-on-dark treatment. */
@@ -418,10 +428,11 @@ select {
 }
 
 .history-strip { display: flex; align-items: flex-start; gap: 10px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 20px; }
-/* Fixed height (not aspect-ratio) — a flex item's aspect-ratio can end up derived from
-   content instead of the reverse when a child's text (e.g. a long autograph tag) forces
-   extra intrinsic height, giving inconsistent widths across thumbnails. */
-.history-thumb { flex: 0 0 92px; width: 92px; height: 123px; }
+/* Fixed WIDTH only (never aspect-ratio on a flex item — see the card-frame comment above
+   for why that goes wrong). Height is left automatic: the box inside has its own fixed
+   height and the caption below it is single-line/non-wrapping, so total height still
+   comes out identical across every thumbnail without needing to hardcode it here too. */
+.history-thumb { flex: 0 0 92px; width: 92px; }
 .history-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
 
 .recap { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); }
@@ -475,11 +486,19 @@ select {
    peeks out behind/to its right just enough to hint at color (refractor sheen, gold
    autograph, etc). Swiping or tapping the front card takes it and promotes the next. */
 .pack-progress { font-size: 12px; color: #97a29c; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
-.stack-wrap { position: relative; height: 210px; margin: 4px auto 18px; }
+/* The front card is the biggest card display in the app on purpose — this is the actual
+   "pull" moment. height is sized for the front card's box (293px, see .card-frame--stack)
+   plus its caption; peeking cards behind it have no caption so they never need the extra
+   room, and being absolutely positioned they're unaffected by it either way. */
+.stack-wrap { position: relative; height: 350px; margin: 4px auto 18px; }
 .stack-item {
-  position: absolute; left: 0; top: 0; width: 118px; aspect-ratio: 3/4;
+  position: absolute; left: 0; top: 0; width: 220px;
   transition: transform .3s ease, opacity .3s ease;
 }
+/* Peeking cards render the bare box (no .card-frame wrapper, no caption — they're still a
+   mystery), so they need their own explicit height; the front card gets its height from
+   .card-frame--stack .card-face instead. */
+.stack-item > .card-face { height: 293px; }
 .stack-item--front { cursor: grab; touch-action: none; }
 .stack-item--front:active { cursor: grabbing; }
 .stack-hint { font-size: 12px; color: #97a29c; margin: 10px 0 0; }
@@ -500,7 +519,6 @@ select {
    sizing bug fixed for .history-thumb. */
 .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, 130px); justify-content: start; gap: 18px 14px; }
 .collection-card { display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
-.collection-card__face { width: 130px; height: 174px; }
 .collection-card__sell { font-size: 12px; padding: 6px 0; width: 100%; }
 
 .toast {
