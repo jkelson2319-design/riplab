@@ -52,8 +52,8 @@ LAST = [
 all_names = [f + " " + l for f in FIRST for l in LAST]
 random.shuffle(all_names)
 
-# 1 QB, 1 RB, 2 WR, 1 TE, 1 OL, 2 DEF = 8 per team.
-POSITIONS = (["QB"] * 1) + (["RB"] * 1) + (["WR"] * 2) + (["TE"] * 1) + (["OL"] * 1) + (["DEF"] * 2)
+# 1 QB, 1 RB, 1 WR, 1 TE, 1 DEF = 5 per team.
+POSITIONS = ["QB", "RB", "WR", "TE", "DEF"]
 ROSTER_SIZE = len(POSITIONS)
 
 name_iter = iter(all_names)

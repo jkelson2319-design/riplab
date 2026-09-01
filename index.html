@@ -35,6 +35,7 @@
         <button class="tab active" data-tab="shop">Shop</button>
         <button class="tab" data-tab="live">Live Break</button>
         <button class="tab" data-tab="collection">Collection</button>
+        <button class="tab" data-tab="checklist">Set Checklist</button>
       </nav>
       <div class="wallet">
         <div class="cash mono" id="cashDisplay">$5,000</div>
@@ -76,7 +77,40 @@
             <button class="btn btn-ghost" id="resetBtn">Reset Save</button>
           </div>
         </div>
+        <div class="collection-toolbar" id="collectionToolbar">
+          <div class="toolbar-group">
+            <label for="collectionSort">Sort</label>
+            <select id="collectionSort">
+              <option value="value">Value (high to low)</option>
+              <option value="team">Team</option>
+              <option value="pos">Position</option>
+            </select>
+          </div>
+          <div class="toolbar-group">
+            <label for="collectionPosFilter">Position</label>
+            <select id="collectionPosFilter">
+              <option value="">All</option>
+            </select>
+          </div>
+          <div class="toolbar-group">
+            <label for="collectionTeamFilter">Team</label>
+            <select id="collectionTeamFilter">
+              <option value="">All</option>
+            </select>
+          </div>
+        </div>
         <div id="collectionContent"></div>
+      </section>
+
+      <section id="checklistView" class="view">
+        <div class="section-head">
+          <div>
+            <h2>Set Checklist</h2>
+            <p class="section-sub" id="checklistSub">Move cards from your collection into the set to check them off. Complete every player, parallel, and autograph to complete the game.</p>
+          </div>
+        </div>
+        <div id="checklistProgress"></div>
+        <div id="checklistContent"></div>
       </section>
     </main>
 
@@ -110,6 +144,14 @@
           <button class="btn btn-primary btn-block" id="confirmCaseBtn">Buy The Case</button>
         </div>
         <div class="modal-close"><button class="btn btn-ghost" id="closeModalBtn">Cancel</button></div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="zoomModalBackdrop" hidden>
+      <div class="modal zoom-modal" role="dialog" aria-modal="true" aria-labelledby="zoomModalTitle">
+        <h3 id="zoomModalTitle" class="sr-only">Card</h3>
+        <div id="zoomModalBody"></div>
+        <div class="modal-close"><button class="btn btn-ghost" id="closeZoomModalBtn">Close</button></div>
       </div>
     </div>
 

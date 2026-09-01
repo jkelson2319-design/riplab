@@ -141,7 +141,15 @@ img { max-width: 100%; }
   background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 10px;
   padding: 12px 16px; margin-bottom: 16px; font-size: 13.5px;
 }
-.odds-groups { display: flex; flex-direction: column; gap: 8px; margin-top: 2px; }
+/* Collapsed by default to keep the shop scannable — an author `display` rule beats the
+   UA stylesheet's [hidden] rule, so it has to be restated here to actually take effect. */
+.odds-groups { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.odds-groups[hidden] { display: none; }
+.btn-odds-toggle {
+  background: none; border: none; color: var(--accent); font-size: 12.5px; font-weight: 700;
+  padding: 4px 0; margin-top: 4px; text-align: left; cursor: pointer; align-self: flex-start;
+}
+.btn-odds-toggle:hover { text-decoration: underline; }
 .odds-group__label {
   display: block; font-size: 10px; font-weight: 700; text-transform: uppercase;
   letter-spacing: .06em; color: var(--text-muted); margin-bottom: 3px;
@@ -510,7 +518,10 @@ select {
 }
 
 /* Collection */
-.collection-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.collection-toolbar { display: flex; justify-content: flex-start; align-items: flex-end; gap: 18px; margin-bottom: 14px; flex-wrap: wrap; }
+.toolbar-group { display: flex; flex-direction: column; gap: 4px; }
+.toolbar-group label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+.toolbar-group select { width: auto; min-width: 130px; }
 .rarity-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
 
 /* Collection grid — shows each card's actual face instead of a plain data row. Fixed
@@ -518,7 +529,43 @@ select {
    sizing bug fixed for .history-thumb. */
 .collection-grid { display: grid; grid-template-columns: repeat(auto-fill, 130px); justify-content: start; gap: 18px 14px; }
 .collection-card { display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+.collection-card .card-face { cursor: pointer; }
 .collection-card__sell { font-size: 12px; padding: 6px 0; width: 100%; }
+
+/* Card zoom modal — a closer look at one card, shared by the Collection grid and the Set
+   Checklist. Reuses .modal but recentered around the (much bigger) stack-sized card. */
+.zoom-modal { max-width: 300px; display: flex; flex-direction: column; align-items: center; }
+.zoom-card-wrap { width: 220px; }
+.zoom-actions { width: 100%; margin-top: 14px; }
+.zoom-actions .btn { width: 100%; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* Set checklist */
+.checklist-progress { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; margin-bottom: 20px; }
+.checklist-progress__row { display: flex; align-items: baseline; justify-content: space-between; font-size: 15px; }
+.checklist-progress__row span { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+.checklist-progress .progress-track { margin: 10px 0 0; }
+.checklist-complete-banner {
+  margin-top: 12px; font-weight: 700; font-size: 15px; color: #3a2b06;
+  background: linear-gradient(135deg, #ffd54a, #fff3c4); border-radius: 8px; padding: 8px 12px; text-align: center;
+}
+.checklist-team { margin-bottom: 28px; }
+.checklist-team h3 { font-size: 18px; margin: 0 0 12px; }
+.checklist-team__players { display: flex; flex-direction: column; gap: 14px; }
+.checklist-player { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.checklist-player__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.checklist-player__head .player { font-weight: 700; font-size: 14.5px; }
+.checklist-player__count { font-size: 12.5px; color: var(--text-muted); }
+.checklist-chip {
+  font-size: 9.5px; font-weight: 700; letter-spacing: .02em; padding: 4px 7px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text-muted); cursor: default;
+}
+.checklist-chip.ready { border-color: var(--accent); color: var(--accent); cursor: pointer; }
+.checklist-chip.ready:hover { background: var(--accent-soft); }
+.checklist-chip.filled { background: var(--accent); border-color: var(--accent); color: #141615; cursor: pointer; }
 
 .toast {
   position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px);

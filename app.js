@@ -123,13 +123,99 @@
     return name === "Superfractor 1/1" ? "Superfractor Autograph 1/1" : name + " Autograph";
   }
 
+  // ---------- set checklist ----------
+  // Every slot a player can fill: Base, each standard color, Rookie Refractor (rookies
+  // only), each autograph tier, and Case Hit. Built once from the same tag vocabulary the
+  // pack odds use, so the checklist can never drift out of sync with what can actually
+  // drop.
+  var CHECKLIST_COLOR_TAGS = Object.keys(COLOR_TAG_MULT_KEY); // Refractor -> Superfractor 1/1
+  function buildChecklistTagDefs() {
+    var defs = [{ key: "base", label: "Base", tag: null, group: "Parallels" }];
+    CHECKLIST_COLOR_TAGS.forEach(function (t) { defs.push({ key: t, label: t, tag: t, group: "Parallels" }); });
+    defs.push({ key: "Rookie Refractor", label: "Rookie Refractor", tag: "Rookie Refractor", group: "Rookie Chase", rookieOnly: true });
+    defs.push({ key: "Base Autograph", label: "Base Autograph", tag: "Base Autograph", group: "Autograph Chase" });
+    CHECKLIST_COLOR_TAGS.forEach(function (t) {
+      var autoTag = autoTagFromColorName(t);
+      defs.push({ key: autoTag, label: autoTag, tag: autoTag, group: "Autograph Chase" });
+    });
+    defs.push({ key: "Case Hit", label: "Case Hit", tag: "Case Hit", group: "Case Hit" });
+    return defs;
+  }
+  var CHECKLIST_TAG_DEFS = buildChecklistTagDefs();
+  var CHECKLIST_GROUP_ORDER = ["Parallels", "Rookie Chase", "Autograph Chase", "Case Hit"];
+
+  function checklistSlotKey(team, player, tagKey) { return team + "|" + player + "|" + tagKey; }
+
+  // Every slot across every player on every team — the full "everything" checklist.
+  function buildChecklistSlots() {
+    var slots = [];
+    TEAMS.forEach(function (team) {
+      activeSet.roster[team].forEach(function (p) {
+        CHECKLIST_TAG_DEFS.forEach(function (def) {
+          if (def.rookieOnly && !p.rookie) return;
+          slots.push({
+            key: checklistSlotKey(team, p.name, def.key), team: team, player: p.name, pos: p.pos,
+            tag: def.tag, tagLabel: def.label, group: def.group
+          });
+        });
+      });
+    });
+    return slots;
+  }
+
+  function tagsMatch(a, b) { return (a || null) === (b || null); }
+
+  // First card in the collection matching a checklist slot, if the player owns one.
+  function findCollectionMatch(team, player, tag) {
+    for (var i = 0; i < state.collection.length; i++) {
+      var c = state.collection[i];
+      if (c.team === team && c.player === player && tagsMatch(c.tag, tag)) return i;
+    }
+    return -1;
+  }
+
+  function checklistFilledCount() {
+    var n = 0;
+    for (var k in state.checklist) if (state.checklist.hasOwnProperty(k)) n++;
+    return n;
+  }
+
+  // Moves a matching card out of the sellable collection and into the checklist slot,
+  // checking it off for good. Returns false if the slot is already filled or nothing in
+  // the collection matches.
+  function assignToChecklist(slotKey, team, player, tag) {
+    if (state.checklist[slotKey]) return false;
+    var idx = findCollectionMatch(team, player, tag);
+    if (idx === -1) return false;
+    state.checklist[slotKey] = state.collection.splice(idx, 1)[0];
+    return true;
+  }
+
+  // Undo: pulls a card back out of the checklist into the sellable collection.
+  function unassignFromChecklist(slotKey) {
+    var card = state.checklist[slotKey];
+    if (!card) return false;
+    delete state.checklist[slotKey];
+    state.collection.push(card);
+    return true;
+  }
+
+  function maybeCelebrateSetCompletion() {
+    if (state.stats.setCompleted) return;
+    var total = buildChecklistSlots().length;
+    if (checklistFilledCount() < total) return;
+    state.stats.setCompleted = true;
+    showToast("🏆 SET COMPLETE — you finished RLFL Debut Chrome!");
+    spawnConfetti(document.body, 80, "var(--accent)", true);
+  }
+
   var FORMATS = [
     {
       id: "retail", tier: "RETAIL", name: "Retail",
       boxPrice: 40, casePrice: 800, boxesPerCase: 20,
       packsPerBox: 4, cardsPerPack: 4, cardsPerBox: 16,
       blurb: "The cheapest way in. Mostly base cards, but every chase card — up to a 1/1 — is still in the pool.",
-      valueScale: 0.49, guaranteedAutographs: 0,
+      valueScale: 0.46, guaranteedAutographs: 0,
       caseHitP: 1 / 150, baseAutoP: 1 / 100, colorAutoP: 1 / 400,
       packOdds: { refractor: 3, rookieRefractor: 8, green: 16, blue: 35, orange: 70, gold: 140, red: 350, black: 700, superfractor: 3500 }
     },
@@ -138,7 +224,7 @@
       boxPrice: 250, casePrice: 3000, boxesPerCase: 12,
       packsPerBox: 6, cardsPerPack: 5, cardsPerBox: 30,
       blurb: "The main premium format — noticeably better refractor and autograph odds, one autograph guaranteed.",
-      valueScale: 1.59, guaranteedAutographs: 1,
+      valueScale: 1.39, guaranteedAutographs: 1,
       caseHitP: 1 / 96, baseAutoP: 1 / 60, colorAutoP: 1 / 70,
       packOdds: { refractor: 2, rookieRefractor: 5, green: 8, blue: 18, orange: 35, gold: 70, red: 175, black: 350, superfractor: 1750 }
     },
@@ -147,7 +233,7 @@
       boxPrice: 600, casePrice: 4800, boxesPerCase: 8,
       packsPerBox: 8, cardsPerPack: 6, cardsPerBox: 48,
       blurb: "The most loaded format on the shelf — a refractor in every pack and two autographs guaranteed.",
-      valueScale: 2.19, guaranteedAutographs: 2,
+      valueScale: 1.88, guaranteedAutographs: 2,
       caseHitP: 1 / 60, baseAutoP: 1 / 40, colorAutoP: 1 / 35,
       packOdds: { refractor: 1, rookieRefractor: 3, green: 5, blue: 10, orange: 20, gold: 40, red: 100, black: 200, superfractor: 1000 }
     }
@@ -163,23 +249,25 @@
     f.megaThreshold = f.boxPrice * 2;
   });
 
-  // Skill-position hierarchy: QBs command the most. Linemen and defense are much less
-  // collectible, so even a nice-tier hit on an OL card stays modest — the color/rarity
-  // makes it a notable pull, but not a payday.
-  var POSITION_VALUE_MULT = { QB: 2.2, WR: 1.6, RB: 1.2, TE: 0.9, DEF: 0.5, OL: 0.2 };
+  // Skill-position hierarchy: QBs command the most. Defense is much less collectible, so
+  // even a nice-tier hit on a DEF card stays modest — the color/rarity makes it a notable
+  // pull, but not a payday.
+  var POSITION_VALUE_MULT = { QB: 2.2, WR: 1.6, RB: 1.2, TE: 0.9, DEF: 0.5 };
 
   var STORAGE_KEY = "break-room-save-v1";
   var state = loadState();
   var pendingBreak = null; // format being configured in the buy-in modal
 
   function loadState() {
-    var def = { cash: 5000, collection: [], stats: { breaksOpened: 0, totalSpent: 0 }, activeBreak: null };
+    var def = { cash: 5000, collection: [], checklist: {}, stats: { breaksOpened: 0, totalSpent: 0, setCompleted: false }, activeBreak: null };
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return def;
       var parsed = JSON.parse(raw);
       if (typeof parsed.cash !== "number") return def;
       if (parsed.activeBreak && (!findFormat(parsed.activeBreak.formatId) || !Array.isArray(parsed.activeBreak.packs))) parsed.activeBreak = null;
+      if (!parsed.checklist || typeof parsed.checklist !== "object") parsed.checklist = {};
+      if (typeof parsed.stats.setCompleted !== "boolean") parsed.stats.setCompleted = false;
       return parsed;
     } catch (e) { return def; }
   }
@@ -407,15 +495,6 @@
         '<rect x="21" y="52" width="7" height="26" rx="3.5" fill="currentColor"/>' +
         '<rect x="32" y="52" width="7" height="26" rx="3.5" fill="currentColor"/>' +
       '</svg>',
-    OL:
-      '<svg viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg">' +
-        '<circle cx="30" cy="14" r="9" fill="currentColor"/>' +
-        '<rect x="16" y="22" width="28" height="32" rx="10" fill="currentColor"/>' +
-        '<rect x="6" y="32" width="13" height="9" rx="4.5" fill="currentColor"/>' +
-        '<rect x="41" y="32" width="13" height="9" rx="4.5" fill="currentColor"/>' +
-        '<rect x="14" y="54" width="9" height="24" rx="4" fill="currentColor"/>' +
-        '<rect x="37" y="54" width="9" height="24" rx="4" fill="currentColor"/>' +
-      '</svg>',
     DEF:
       '<svg viewBox="0 0 60 80" xmlns="http://www.w3.org/2000/svg">' +
         '<circle cx="30" cy="20" r="9" fill="currentColor"/>' +
@@ -505,7 +584,8 @@
             '<p class="section-sub">' + f.packsPerBox + ' packs/box (' + f.cardsPerPack + ' cards each = ' + f.cardsPerBox + ') · ' +
               f.boxesPerCase + ' boxes/case (' + money(f.casePrice) + ') · ' + TEAMS.length + '-team checklist' +
               (f.guaranteedAutographs ? ' · guaranteed ' + f.guaranteedAutographs + ' autograph' + (f.guaranteedAutographs > 1 ? 's' : '') + '/box' : '') + '</p>' +
-            '<div class="odds-groups">' + oddsGroupsHTML(f) + '</div>' +
+            '<button class="btn btn-odds-toggle" data-odds-toggle="' + f.id + '">Show Hit Odds ▾</button>' +
+            '<div class="odds-groups" id="odds-' + f.id + '" hidden>' + oddsGroupsHTML(f) + '</div>' +
             '<div class="break-card__foot">' + btn + '</div>' +
           '</div>' +
         '</div>'
@@ -829,21 +909,66 @@
     if (document.getElementById("stackWrap")) maybeBurstFrontCard(ab);
   }
 
+  var COLLECTION_POSITIONS = ["QB", "RB", "WR", "TE", "DEF"];
+  var collectionView = { sort: "value", pos: "", team: "" };
+  function initCollectionToolbar() {
+    var posSelect = document.getElementById("collectionPosFilter");
+    COLLECTION_POSITIONS.forEach(function (p) {
+      var opt = document.createElement("option");
+      opt.value = p; opt.textContent = p;
+      posSelect.appendChild(opt);
+    });
+    var teamSelect = document.getElementById("collectionTeamFilter");
+    TEAMS.forEach(function (t) {
+      var opt = document.createElement("option");
+      opt.value = t; opt.textContent = t;
+      teamSelect.appendChild(opt);
+    });
+    document.getElementById("collectionSort").addEventListener("change", function (e) {
+      collectionView.sort = e.target.value;
+      renderCollection();
+    });
+    posSelect.addEventListener("change", function (e) {
+      collectionView.pos = e.target.value;
+      renderCollection();
+    });
+    teamSelect.addEventListener("change", function (e) {
+      collectionView.team = e.target.value;
+      renderCollection();
+    });
+  }
+
   function renderCollection() {
     var content = document.getElementById("collectionContent");
     var sub = document.getElementById("collectionSub");
-    var coll = state.collection.slice().sort(function (a, b) { return b.value - a.value; });
+    sub.textContent = state.collection.length + " card" + (state.collection.length === 1 ? "" : "s") + " · " + money(collectionValue()) + " total value";
 
-    sub.textContent = coll.length + " card" + (coll.length === 1 ? "" : "s") + " · " + money(collectionValue()) + " total value";
+    if (state.collection.length === 0) {
+      content.innerHTML = '<div class="empty-state"><h3>Empty binder</h3><p>Rip a break and cards matching your team land here.</p></div>';
+      return;
+    }
+
+    var coll = state.collection.filter(function (c) {
+      if (collectionView.pos && c.pos !== collectionView.pos) return false;
+      if (collectionView.team && c.team !== collectionView.team) return false;
+      return true;
+    });
+    if (collectionView.sort === "team") {
+      coll.sort(function (a, b) { return a.team.localeCompare(b.team) || b.value - a.value; });
+    } else if (collectionView.sort === "pos") {
+      coll.sort(function (a, b) { return a.pos.localeCompare(b.pos) || b.value - a.value; });
+    } else {
+      coll.sort(function (a, b) { return b.value - a.value; });
+    }
 
     if (coll.length === 0) {
-      content.innerHTML = '<div class="empty-state"><h3>Empty binder</h3><p>Rip a break and cards matching your team land here.</p></div>';
+      content.innerHTML = '<div class="empty-state"><h3>No matches</h3><p>No cards match this filter.</p></div>';
       return;
     }
 
     var tiles = coll.map(function (c) {
       return (
-        '<div class="collection-card">' +
+        '<div class="collection-card" data-card-id="' + c.id + '">' +
           cardWithCaptionHTML(c, true, "sm", "grid") +
           '<button class="btn collection-card__sell" data-sell="' + c.id + '">Sell</button>' +
         '</div>'
@@ -853,11 +978,86 @@
     content.innerHTML = '<div class="collection-grid">' + tiles + '</div>';
   }
 
+  // ---------- set checklist ----------
+  var CHECKLIST_CHIP_SHORT = {
+    "Base": "BASE", "Rookie Refractor": "RC", "Base Autograph": "BASE ✎", "Case Hit": "CASE HIT",
+    "Superfractor 1/1": "1/1", "Superfractor Autograph 1/1": "1/1 ✎"
+  };
+  // Short chip label: "Green Refractor" -> "GREEN", "Green Refractor Autograph" -> "GREEN ✎".
+  function checklistChipShort(label) {
+    if (CHECKLIST_CHIP_SHORT[label]) return CHECKLIST_CHIP_SHORT[label];
+    var isAuto = label.indexOf("Autograph") !== -1;
+    var color = label.split(" ")[0].toUpperCase();
+    return isAuto ? color + " ✎" : color;
+  }
+
+  function checklistChipHTML(slot) {
+    var filled = !!state.checklist[slot.key];
+    var ready = !filled && findCollectionMatch(slot.team, slot.player, slot.tag) !== -1;
+    var cls = "checklist-chip" + (filled ? " filled" : ready ? " ready" : " empty");
+    var status = filled ? " — in your set" : ready ? " — click to add" : " — not owned yet";
+    return '<button class="' + cls + '" data-checklist-chip="' + slot.key + '" title="' + slot.tagLabel + status + '">' +
+      checklistChipShort(slot.tagLabel) + '</button>';
+  }
+
+  function checklistPlayerHTML(player, slots) {
+    var groups = {};
+    slots.forEach(function (s) { (groups[s.group] = groups[s.group] || []).push(s); });
+    var filledCount = slots.filter(function (s) { return !!state.checklist[s.key]; }).length;
+    var groupsHTML = CHECKLIST_GROUP_ORDER.filter(function (g) { return groups[g]; }).map(function (g) {
+      return '<div class="odds-group"><span class="odds-group__label">' + g + '</span><div class="odds-row">' +
+        groups[g].map(checklistChipHTML).join("") + '</div></div>';
+    }).join("");
+    return (
+      '<div class="checklist-player">' +
+        '<div class="checklist-player__head">' +
+          '<span class="player">' + player.name + (player.rookie ? ' <span class="rc-crest">RC</span>' : '') +
+            ' <span class="pos-tag">' + player.pos + '</span></span>' +
+          '<span class="checklist-player__count mono">' + filledCount + '/' + slots.length + '</span>' +
+        '</div>' +
+        groupsHTML +
+      '</div>'
+    );
+  }
+
+  function renderChecklistProgress() {
+    var el = document.getElementById("checklistProgress");
+    var total = buildChecklistSlots().length;
+    var filled = checklistFilledCount();
+    var pct = total ? Math.round((filled / total) * 100) : 0;
+    // The banner reflects actual completion, not the one-shot celebration flag (that flag
+    // only guards against re-firing the toast/confetti on every render once you're done).
+    el.innerHTML =
+      '<div class="checklist-progress">' +
+        '<div class="checklist-progress__row"><strong>' + filled.toLocaleString() + ' / ' + total.toLocaleString() + ' checked off</strong><span>' + pct + '%</span></div>' +
+        '<div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+        (filled >= total ? '<div class="checklist-complete-banner">🏆 Set complete — you finished RLFL Debut Chrome!</div>' : '') +
+      '</div>';
+  }
+
+  function renderChecklist() {
+    var content = document.getElementById("checklistContent");
+    var allSlots = buildChecklistSlots();
+    var byPlayer = {};
+    allSlots.forEach(function (s) {
+      var pk = s.team + "|" + s.player;
+      (byPlayer[pk] = byPlayer[pk] || []).push(s);
+    });
+    content.innerHTML = TEAMS.map(function (team) {
+      var playersHTML = activeSet.roster[team].map(function (p) {
+        return checklistPlayerHTML(p, byPlayer[team + "|" + p.name] || []);
+      }).join("");
+      return '<div class="checklist-team"><h3>' + team + '</h3><div class="checklist-team__players">' + playersHTML + '</div></div>';
+    }).join("");
+  }
+
   function renderAll() {
     renderHeader();
     renderShop();
     renderLive();
     renderCollection();
+    renderChecklistProgress();
+    renderChecklist();
     saveState();
   }
 
@@ -919,6 +1119,44 @@
   }
   function closeModal() { backdrop.hidden = true; pendingBreak = null; }
 
+  // ---------- card zoom ----------
+  // A closer look at any single card, shared by the Collection grid and the Set
+  // Checklist. The action button adapts to where the card came from: sell it (from the
+  // collection) or pull it back out of the set (from the checklist).
+  var zoomBackdrop = document.getElementById("zoomModalBackdrop");
+  var zoomContext = null;
+  function openCardZoom(card, ctx) {
+    zoomContext = ctx || {};
+    var actionHTML = "";
+    if (zoomContext.context === "collection") {
+      actionHTML = '<button class="btn btn-primary" id="zoomActionBtn">Sell for ' + money(card.value) + '</button>';
+    } else if (zoomContext.context === "checklist") {
+      actionHTML = '<button class="btn" id="zoomActionBtn">Remove from Set</button>';
+    }
+    document.getElementById("zoomModalBody").innerHTML =
+      '<div class="zoom-card-wrap">' + cardWithCaptionHTML(card, true, null, "stack") + '</div>' +
+      (actionHTML ? '<div class="zoom-actions">' + actionHTML + '</div>' : '');
+    zoomBackdrop.hidden = false;
+  }
+  function closeCardZoom() { zoomBackdrop.hidden = true; zoomContext = null; }
+  document.getElementById("closeZoomModalBtn").addEventListener("click", closeCardZoom);
+  zoomBackdrop.addEventListener("click", function (e) {
+    if (e.target === zoomBackdrop) { closeCardZoom(); return; }
+    if (!e.target.closest("#zoomActionBtn") || !zoomContext) return;
+    if (zoomContext.context === "collection") {
+      var idx = state.collection.findIndex(function (c) { return c.id === zoomContext.cardId; });
+      if (idx === -1) return;
+      var card = state.collection.splice(idx, 1)[0];
+      state.cash += card.value;
+      showToast("Sold " + card.player + " for " + money(card.value));
+    } else if (zoomContext.context === "checklist") {
+      unassignFromChecklist(zoomContext.slotKey);
+      showToast("Removed from set — back in your collection");
+    }
+    closeCardZoom();
+    renderAll();
+  });
+
   function startBreak(mode, yourTeam, price) {
     var f = pendingBreak;
     var boxCount = mode === "box" ? 1 : f.boxesPerCase;
@@ -943,7 +1181,15 @@
     var buyBtn = e.target.closest("[data-buy]");
     if (buyBtn) { openModal(buyBtn.dataset.buy); return; }
     var goBtn = e.target.closest("[data-goto-live]");
-    if (goBtn) { switchTab("live"); }
+    if (goBtn) { switchTab("live"); return; }
+    var oddsToggle = e.target.closest("[data-odds-toggle]");
+    if (oddsToggle) {
+      var panel = document.getElementById("odds-" + oddsToggle.dataset.oddsToggle);
+      if (!panel) return;
+      var show = panel.hasAttribute("hidden");
+      if (show) panel.removeAttribute("hidden"); else panel.setAttribute("hidden", "");
+      oddsToggle.textContent = show ? "Hide Hit Odds ▴" : "Show Hit Odds ▾";
+    }
   });
   document.getElementById("shopNotice").addEventListener("click", function (e) {
     if (e.target.closest("#bailoutBtn")) {
@@ -1113,17 +1359,45 @@
   })(document.getElementById("liveContent"));
 
   // ---------- collection interactions ----------
+  initCollectionToolbar();
   document.getElementById("collectionContent").addEventListener("click", function (e) {
     var sellBtn = e.target.closest("[data-sell]");
-    if (!sellBtn) return;
-    var id = sellBtn.dataset.sell;
-    var idx = state.collection.findIndex(function (c) { return c.id === id; });
-    if (idx === -1) return;
-    var card = state.collection[idx];
-    state.cash += card.value;
-    state.collection.splice(idx, 1);
-    showToast("Sold " + card.player + " for " + money(card.value));
-    renderAll();
+    if (sellBtn) {
+      var id = sellBtn.dataset.sell;
+      var idx = state.collection.findIndex(function (c) { return c.id === id; });
+      if (idx === -1) return;
+      var card = state.collection[idx];
+      state.cash += card.value;
+      state.collection.splice(idx, 1);
+      showToast("Sold " + card.player + " for " + money(card.value));
+      renderAll();
+      return;
+    }
+    var cardWrap = e.target.closest(".collection-card");
+    if (cardWrap) {
+      var c = state.collection.find(function (c) { return c.id === cardWrap.dataset.cardId; });
+      if (c) openCardZoom(c, { context: "collection", cardId: c.id });
+    }
+  });
+
+  // ---------- set checklist interactions ----------
+  document.getElementById("checklistContent").addEventListener("click", function (e) {
+    var chip = e.target.closest("[data-checklist-chip]");
+    if (!chip) return;
+    var slotKey = chip.dataset.checklistChip;
+    if (chip.classList.contains("filled")) {
+      var card = state.checklist[slotKey];
+      if (card) openCardZoom(card, { context: "checklist", slotKey: slotKey });
+      return;
+    }
+    if (!chip.classList.contains("ready")) return;
+    var slot = buildChecklistSlots().filter(function (s) { return s.key === slotKey; })[0];
+    if (!slot) return;
+    if (assignToChecklist(slot.key, slot.team, slot.player, slot.tag)) {
+      showToast("Added " + slot.player + " · " + slot.tagLabel + " to your set");
+      maybeCelebrateSetCompletion();
+      renderAll();
+    }
   });
 
   document.getElementById("sellAllBtn").addEventListener("click", function () {
@@ -1148,7 +1422,7 @@
     resetArmed = false;
     e.target.textContent = "Reset Save";
     localStorage.removeItem(STORAGE_KEY);
-    state = { cash: 5000, collection: [], stats: { breaksOpened: 0, totalSpent: 0 }, activeBreak: null };
+    state = { cash: 5000, collection: [], checklist: {}, stats: { breaksOpened: 0, totalSpent: 0, setCompleted: false }, activeBreak: null };
     switchTab("shop");
     renderAll();
     showToast("Save reset");
