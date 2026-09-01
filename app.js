@@ -16,7 +16,6 @@
   // Same palette backs both the plain color tiers and their autograph counterparts.
   var REFRACTOR_COLORS = {
     "Refractor":        "linear-gradient(135deg, #3a3a3a 0%, #c7c7c7 28%, #ffffff 50%, #c7c7c7 72%, #3a3a3a 100%)",
-    "Rookie Refractor": "linear-gradient(135deg, #3a3320 0%, #c9b077 28%, #fff6d8 50%, #c9b077 72%, #3a3320 100%)",
     "Green Refractor":  "linear-gradient(135deg, #072a15 0%, #2f8a4f 28%, #c3f7d3 50%, #2f8a4f 72%, #072a15 100%)",
     "Blue Refractor":   "linear-gradient(135deg, #06203d 0%, #2f6fb3 28%, #bfe4ff 50%, #2f6fb3 72%, #06203d 100%)",
     "Orange Refractor": "linear-gradient(135deg, #3a2008 0%, #d97a1f 28%, #ffe3bf 50%, #d97a1f 72%, #3a2008 100%)",
@@ -33,7 +32,6 @@
   var CARD_MULT = {
     base: 1,
     refractor: 1.5,
-    rookieRefractor: 2,
     green: 2.25,
     blue: 3.5,
     orange: 5,
@@ -44,20 +42,20 @@
     autograph: 3,
     caseHit: 15
   };
-  // Plain refractor/color tag name -> its CARD_MULT key. Rookie Refractor and Case Hit are
-  // deliberately excluded: they're separate chase families, not rungs on this color ladder.
+  // Plain refractor/color tag name -> its CARD_MULT key. Case Hit is deliberately
+  // excluded: it's a separate chase family, not a rung on this color ladder.
   var COLOR_TAG_MULT_KEY = {
     "Refractor": "refractor", "Green Refractor": "green", "Blue Refractor": "blue",
     "Orange Refractor": "orange", "Gold Refractor": "gold", "Red Refractor": "red",
     "Black Refractor": "black", "Superfractor 1/1": "superfractor"
   };
-  // Given any card tag (plain, autograph, rookie, or case hit), returns the plain color/
-  // rookie tag name used for cosmetic lookups (REFRACTOR_COLORS background, QB image
-  // filter) — e.g. "Green Refractor Autograph" -> "Green Refractor". Returns null for
-  // Base Autograph and Case Hit, which have no color tier of their own.
+  // Given any card tag (plain, autograph, or case hit), returns the plain color tag name
+  // used for cosmetic lookups (REFRACTOR_COLORS background, QB image filter) — e.g.
+  // "Green Refractor Autograph" -> "Green Refractor". Returns null for Base Autograph and
+  // Case Hit, which have no color tier of their own.
   function tierValueKey(tag) {
     if (!tag) return null;
-    if (COLOR_TAG_MULT_KEY.hasOwnProperty(tag) || tag === "Rookie Refractor") return tag;
+    if (COLOR_TAG_MULT_KEY.hasOwnProperty(tag)) return tag;
     if (tag === "Superfractor Autograph 1/1") return "Superfractor 1/1";
     var m = /^(.*) Autograph$/.exec(tag);
     if (m && COLOR_TAG_MULT_KEY.hasOwnProperty(m[1])) return m[1];
@@ -67,7 +65,6 @@
   // e.g. "Blue Refractor" and "Blue Refractor Autograph" both resolve to CARD_MULT.blue.
   function parallelMultFor(tag) {
     if (!tag) return CARD_MULT.base;
-    if (tag === "Rookie Refractor") return CARD_MULT.rookieRefractor;
     var colorTag = tierValueKey(tag);
     if (colorTag && COLOR_TAG_MULT_KEY.hasOwnProperty(colorTag)) return CARD_MULT[COLOR_TAG_MULT_KEY[colorTag]];
     return CARD_MULT.base; // e.g. "Base Autograph"
@@ -89,8 +86,8 @@
   var PRODUCT_NAME = "RLFL Debut Chrome";
 
   // Rarest-first STANDARD COLOR LADDER: Refractor -> Green -> Blue -> Orange -> Gold ->
-  // Red -> Black -> Superfractor. Rookie Refractor is NOT a rung here — it's a separate,
-  // rookie-only roll (see rollPackHit) so it never competes with or sits "between" colors.
+  // Red -> Black -> Superfractor. Rookies pull from this exact same ladder as everyone
+  // else — being a rookie only changes the RC badge on the card, not what it can hit.
   // Each `p` is the CUMULATIVE chance a pack's hit slot lands on this tier or something
   // rarer, so a single random draw (rollLadder) can never trigger two tiers at once.
   function buildColorLadder(o) {
@@ -106,9 +103,9 @@
     ];
   }
   // The autograph chase has its own ladder over the same color names (Refractor up
-  // through Superfractor, no Rookie Refractor), rescaled so its "any color auto" total
-  // matches the format's colorAutoP. Anything below "Refractor Autograph" falls through
-  // to plain "Base Autograph".
+  // through Superfractor), rescaled so its "any color auto" total matches the format's
+  // colorAutoP. Anything below "Refractor Autograph" falls through to plain "Base
+  // Autograph".
   function autoColorLadder(colorLadder, colorAutoP) {
     var bottomP = colorLadder[colorLadder.length - 1].p; // "Refractor" — least rare rung
     var scale = bottomP > 0 ? colorAutoP / bottomP : 0;
@@ -124,15 +121,14 @@
   }
 
   // ---------- set checklist ----------
-  // Every slot a player can fill: Base, each standard color, Rookie Refractor (rookies
-  // only), each autograph tier, and Case Hit. Built once from the same tag vocabulary the
-  // pack odds use, so the checklist can never drift out of sync with what can actually
-  // drop.
+  // Every slot a player can fill: Base, each standard color, each autograph tier, and
+  // Case Hit — the same slots for every player regardless of rookie status. Built once
+  // from the same tag vocabulary the pack odds use, so the checklist can never drift out
+  // of sync with what can actually drop.
   var CHECKLIST_COLOR_TAGS = Object.keys(COLOR_TAG_MULT_KEY); // Refractor -> Superfractor 1/1
   function buildChecklistTagDefs() {
     var defs = [{ key: "base", label: "Base", tag: null, group: "Parallels" }];
     CHECKLIST_COLOR_TAGS.forEach(function (t) { defs.push({ key: t, label: t, tag: t, group: "Parallels" }); });
-    defs.push({ key: "Rookie Refractor", label: "Rookie Refractor", tag: "Rookie Refractor", group: "Rookie Chase", rookieOnly: true });
     defs.push({ key: "Base Autograph", label: "Base Autograph", tag: "Base Autograph", group: "Autograph Chase" });
     CHECKLIST_COLOR_TAGS.forEach(function (t) {
       var autoTag = autoTagFromColorName(t);
@@ -142,7 +138,7 @@
     return defs;
   }
   var CHECKLIST_TAG_DEFS = buildChecklistTagDefs();
-  var CHECKLIST_GROUP_ORDER = ["Parallels", "Rookie Chase", "Autograph Chase", "Case Hit"];
+  var CHECKLIST_GROUP_ORDER = ["Parallels", "Autograph Chase", "Case Hit"];
 
   function checklistSlotKey(team, player, tagKey) { return team + "|" + player + "|" + tagKey; }
 
@@ -152,7 +148,6 @@
     TEAMS.forEach(function (team) {
       activeSet.roster[team].forEach(function (p) {
         CHECKLIST_TAG_DEFS.forEach(function (def) {
-          if (def.rookieOnly && !p.rookie) return;
           slots.push({
             key: checklistSlotKey(team, p.name, def.key), team: team, player: p.name, pos: p.pos,
             tag: def.tag, tagLabel: def.label, group: def.group
@@ -215,34 +210,32 @@
       boxPrice: 40, casePrice: 800, boxesPerCase: 20,
       packsPerBox: 4, cardsPerPack: 4, cardsPerBox: 16,
       blurb: "The cheapest way in. Mostly base cards, but every chase card — up to a 1/1 — is still in the pool.",
-      valueScale: 0.46, guaranteedAutographs: 0,
+      valueScale: 0.465, guaranteedAutographs: 0,
       caseHitP: 1 / 150, baseAutoP: 1 / 100, colorAutoP: 1 / 400,
-      packOdds: { refractor: 3, rookieRefractor: 8, green: 16, blue: 35, orange: 70, gold: 140, red: 350, black: 700, superfractor: 3500 }
+      packOdds: { refractor: 3, green: 16, blue: 35, orange: 70, gold: 140, red: 350, black: 700, superfractor: 3500 }
     },
     {
       id: "hobby", tier: "HOBBY", name: "Hobby",
       boxPrice: 250, casePrice: 3000, boxesPerCase: 12,
       packsPerBox: 6, cardsPerPack: 5, cardsPerBox: 30,
       blurb: "The main premium format — noticeably better refractor and autograph odds, one autograph guaranteed.",
-      valueScale: 1.39, guaranteedAutographs: 1,
+      valueScale: 1.40, guaranteedAutographs: 1,
       caseHitP: 1 / 96, baseAutoP: 1 / 60, colorAutoP: 1 / 70,
-      packOdds: { refractor: 2, rookieRefractor: 5, green: 8, blue: 18, orange: 35, gold: 70, red: 175, black: 350, superfractor: 1750 }
+      packOdds: { refractor: 2, green: 8, blue: 18, orange: 35, gold: 70, red: 175, black: 350, superfractor: 1750 }
     },
     {
       id: "jumbo", tier: "JUMBO", name: "Jumbo Hobby",
       boxPrice: 600, casePrice: 4800, boxesPerCase: 8,
       packsPerBox: 8, cardsPerPack: 6, cardsPerBox: 48,
       blurb: "The most loaded format on the shelf — a refractor in every pack and two autographs guaranteed.",
-      valueScale: 1.88, guaranteedAutographs: 2,
+      valueScale: 1.90, guaranteedAutographs: 2,
       caseHitP: 1 / 60, baseAutoP: 1 / 40, colorAutoP: 1 / 35,
-      packOdds: { refractor: 1, rookieRefractor: 3, green: 5, blue: 10, orange: 20, gold: 40, red: 100, black: 200, superfractor: 1000 }
+      packOdds: { refractor: 1, green: 5, blue: 10, orange: 20, gold: 40, red: 100, black: 200, superfractor: 1000 }
     }
   ];
   FORMATS.forEach(function (f) {
     f.colorLadder = buildColorLadder(f.packOdds);
     f.autoColorLadder = autoColorLadder(f.colorLadder, f.colorAutoP);
-    // Rookie Refractor is its own independent roll, not a rung on the color ladder above.
-    f.rookieRefractorP = 1 / f.packOdds.rookieRefractor;
     // "Mega hit" scales with the format instead of a fixed dollar figure — a Retail box
     // should still be able to produce its own jaw-dropping moment even though its dollar
     // values run far lower than Jumbo's.
@@ -298,22 +291,13 @@
     };
   }
 
-  function pickHitPlayer(team, requiresRookie) {
-    var pool = activeSet.roster[team];
-    if (requiresRookie) {
-      var rookies = pool.filter(function (p) { return p.rookie; });
-      if (rookies.length) pool = rookies;
-    }
-    return pick(pool);
-  }
-
   // A pack's hit-slot card: refractor / autograph / case hit. Its value is always
   // PLAYER BASE VALUE x PARALLEL MULT x AUTO MULT (if applicable) — CARD_MULT is the only
   // place rarity multipliers live, so the player being hit still matters as much as the
   // parallel does (a star's Gold Refractor is worth far more than a scrub's).
-  function makeHitCard(format, tag, isAutograph, requiresRookie) {
+  function makeHitCard(format, tag, isAutograph) {
     var team = pick(TEAMS);
-    var player = pickHitPlayer(team, requiresRookie);
+    var player = pick(activeSet.roster[team]);
     var posMult = POSITION_VALUE_MULT[player.pos] || 1;
     var baseScale = format.valueScale * posMult;
     var lo = Math.max(1, Math.round(HIT_CARD_VALUE[0] * baseScale));
@@ -327,27 +311,24 @@
   }
 
   // Decides what (if anything) occupies a single pack's one hit slot. Case Hit, Autograph,
-  // Rookie Refractor, and the standard color ladder are four independent, mutually
-  // exclusive rolls — never nested inside one another — so none of them compete for the
-  // same "slot" in a way that would make one imply or preclude another.
+  // and the standard color ladder are three independent, mutually exclusive rolls — never
+  // nested inside one another — so none of them compete for the same "slot" in a way that
+  // would make one imply or preclude another.
   function rollPackHit(format) {
     if (Math.random() < format.caseHitP) {
-      return { tag: "Case Hit", isAutograph: false, requiresRookie: false };
+      return { tag: "Case Hit", isAutograph: false };
     }
     var totalAutoP = format.baseAutoP + format.colorAutoP;
     if (Math.random() < totalAutoP) {
       if (Math.random() < format.colorAutoP / totalAutoP) {
         var color = rollLadder(format.autoColorLadder) || "Refractor";
-        return { tag: autoTagFromColorName(color), isAutograph: true, requiresRookie: false };
+        return { tag: autoTagFromColorName(color), isAutograph: true };
       }
-      return { tag: "Base Autograph", isAutograph: true, requiresRookie: false };
-    }
-    if (Math.random() < format.rookieRefractorP) {
-      return { tag: "Rookie Refractor", isAutograph: false, requiresRookie: true };
+      return { tag: "Base Autograph", isAutograph: true };
     }
     var tier = rollLadder(format.colorLadder);
-    if (!tier) return { tag: null, isAutograph: false, requiresRookie: false };
-    return { tag: tier, isAutograph: false, requiresRookie: false };
+    if (!tier) return { tag: null, isAutograph: false };
+    return { tag: tier, isAutograph: false };
   }
 
   function generatePackCards(format) {
@@ -356,7 +337,7 @@
     var cards = [];
     for (var i = 0; i < format.cardsPerPack; i++) {
       if (i === hitIndex && hit.tag) {
-        cards.push(makeHitCard(format, hit.tag, hit.isAutograph, hit.requiresRookie));
+        cards.push(makeHitCard(format, hit.tag, hit.isAutograph));
       } else {
         cards.push(makeCard(format));
       }
@@ -372,7 +353,7 @@
       var color = rollLadder(format.autoColorLadder) || "Refractor";
       tag = autoTagFromColorName(color);
     }
-    pack.cards[pack.hitIndex] = makeHitCard(format, tag, true, false);
+    pack.cards[pack.hitIndex] = makeHitCard(format, tag, true);
     pack.hasAutograph = true;
   }
 
@@ -533,7 +514,6 @@
     var parallelChips = oddsChipsHTML(f.colorLadder.slice().reverse().map(function (t) {
       return t.name + " 1:" + f.packOdds[COLOR_TAG_MULT_KEY[t.name]].toLocaleString();
     }));
-    var rookieChips = oddsChipsHTML(["Rookie Refractor 1:" + f.packOdds.rookieRefractor.toLocaleString()]);
     var autoChips = oddsChipsHTML(
       ["Base Autograph 1:" + Math.round(1 / f.baseAutoP).toLocaleString()].concat(
         f.autoColorLadder.slice().reverse().map(function (t) {
@@ -544,7 +524,6 @@
     var caseHitChips = oddsChipsHTML(["Case Hit 1:" + Math.round(1 / f.caseHitP).toLocaleString()]);
     return (
       oddsGroup("Parallels", parallelChips) +
-      oddsGroup("Rookie Chase", rookieChips) +
       oddsGroup("Autograph Chase", autoChips) +
       oddsGroup("Case Hit", caseHitChips)
     );
@@ -613,7 +592,6 @@
     return { src: QB_CARD_IMAGE, selfContained: false, filter: qbImageFilter(card.tag) };
   }
   var QB_IMAGE_FILTER = {
-    "Rookie Refractor": "sepia(.25) saturate(1.3) hue-rotate(-8deg)",
     "Green Refractor": "hue-rotate(100deg) saturate(1.4)",
     "Blue Refractor": "hue-rotate(190deg) saturate(1.3)",
     "Orange Refractor": "hue-rotate(-40deg) saturate(1.5) brightness(1.05)",
@@ -980,7 +958,7 @@
 
   // ---------- set checklist ----------
   var CHECKLIST_CHIP_SHORT = {
-    "Base": "BASE", "Rookie Refractor": "RC", "Base Autograph": "BASE ✎", "Case Hit": "CASE HIT",
+    "Base": "BASE", "Base Autograph": "BASE ✎", "Case Hit": "CASE HIT",
     "Superfractor 1/1": "1/1", "Superfractor Autograph 1/1": "1/1 ✎"
   };
   // Short chip label: "Green Refractor" -> "GREEN", "Green Refractor Autograph" -> "GREEN ✎".
