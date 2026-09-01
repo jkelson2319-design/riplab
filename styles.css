@@ -141,7 +141,12 @@ img { max-width: 100%; }
   background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 10px;
   padding: 12px 16px; margin-bottom: 16px; font-size: 13.5px;
 }
-.odds-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+.odds-groups { display: flex; flex-direction: column; gap: 8px; margin-top: 2px; }
+.odds-group__label {
+  display: block; font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--text-muted); margin-bottom: 3px;
+}
+.odds-row { display: flex; gap: 6px; flex-wrap: wrap; }
 .odds-chip {
   font-size: 11px; padding: 3px 7px; border-radius: 999px; border: 1px solid var(--border);
   color: var(--text-muted); font-family: 'JetBrains Mono', monospace;
