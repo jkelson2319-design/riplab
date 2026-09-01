@@ -581,7 +581,30 @@
   // lets a specific tag point at its own fully unique, finished art with no retint at all.
   var QB_CARD_IMAGE = "images/qb-chrome.jpg";
   var QB_PLAYER_ART = {
-    "Justin Hayes": { image: "images/qb-justin-hayes.jpg", selfContained: true }
+    "Justin Hayes": {
+      image: "images/qb-justin-hayes.jpg", selfContained: true,
+      // Real per-parallel art — every tier is covered now, no CSS-retint fallback needed.
+      variants: {
+        "Refractor": "images/qb-justin-hayes-refractor.jpg",
+        "Green Refractor": "images/qb-justin-hayes-green.jpg",
+        "Blue Refractor": "images/qb-justin-hayes-blue.jpg",
+        "Orange Refractor": "images/qb-justin-hayes-orange.jpg",
+        "Gold Refractor": "images/qb-justin-hayes-gold.jpg",
+        "Red Refractor": "images/qb-justin-hayes-red.jpg",
+        "Black Refractor": "images/qb-justin-hayes-black.jpg",
+        "Superfractor 1/1": "images/qb-justin-hayes-superfractor.jpg",
+        "Base Autograph": "images/qb-justin-hayes-base-auto.jpg",
+        "Refractor Autograph": "images/qb-justin-hayes-refractor-auto.jpg",
+        "Green Refractor Autograph": "images/qb-justin-hayes-green-auto.jpg",
+        "Blue Refractor Autograph": "images/qb-justin-hayes-blue-auto.jpg",
+        "Orange Refractor Autograph": "images/qb-justin-hayes-orange-auto.jpg",
+        "Gold Refractor Autograph": "images/qb-justin-hayes-gold-auto.jpg",
+        "Red Refractor Autograph": "images/qb-justin-hayes-red-auto.jpg",
+        "Black Refractor Autograph": "images/qb-justin-hayes-black-auto.jpg",
+        "Superfractor Autograph 1/1": "images/qb-justin-hayes-superfractor-auto.jpg",
+        "Case Hit": "images/qb-justin-hayes-case-hit.jpg"
+      }
+    }
   };
   function qbArtFor(card) {
     var art = QB_PLAYER_ART[card.player];

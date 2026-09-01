@@ -1,6 +1,6 @@
 // RipLab service worker — enables "install" + offline play.
 // Bump CACHE_NAME whenever you change any cached file so clients pick up the update.
-var CACHE_NAME = "riplab-v23";
+var CACHE_NAME = "riplab-v24";
 var CORE_ASSETS = [
   "./",
   "./index.html",
@@ -11,7 +11,25 @@ var CORE_ASSETS = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./images/qb-chrome.jpg",
-  "./images/qb-justin-hayes.jpg"
+  "./images/qb-justin-hayes.jpg",
+  "./images/qb-justin-hayes-refractor.jpg",
+  "./images/qb-justin-hayes-refractor-auto.jpg",
+  "./images/qb-justin-hayes-green.jpg",
+  "./images/qb-justin-hayes-green-auto.jpg",
+  "./images/qb-justin-hayes-blue.jpg",
+  "./images/qb-justin-hayes-blue-auto.jpg",
+  "./images/qb-justin-hayes-orange.jpg",
+  "./images/qb-justin-hayes-orange-auto.jpg",
+  "./images/qb-justin-hayes-gold.jpg",
+  "./images/qb-justin-hayes-gold-auto.jpg",
+  "./images/qb-justin-hayes-red.jpg",
+  "./images/qb-justin-hayes-red-auto.jpg",
+  "./images/qb-justin-hayes-black.jpg",
+  "./images/qb-justin-hayes-black-auto.jpg",
+  "./images/qb-justin-hayes-superfractor.jpg",
+  "./images/qb-justin-hayes-superfractor-auto.jpg",
+  "./images/qb-justin-hayes-base-auto.jpg",
+  "./images/qb-justin-hayes-case-hit.jpg"
 ];
 
 self.addEventListener("install", function (event) {
