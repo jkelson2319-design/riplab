@@ -253,6 +253,9 @@ select {
 .card-face.qb-card { padding: 0; flex-direction: column; justify-content: flex-start; }
 .qb-card__imgwrap { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; }
 .qb-card__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+/* Self-contained per-player art already has its own border, logos, and name plate baked
+   in — "cover" would crop those out, so show the whole image letterboxed instead. */
+.qb-card__imgwrap--contain .qb-card__img { object-fit: contain; object-position: center; background: var(--surface); }
 .qb-card__plate {
   position: absolute; z-index: 2; left: 7%; width: 56%; top: 85%; height: 8%;
   display: flex; flex-direction: column; align-items: center; justify-content: center;

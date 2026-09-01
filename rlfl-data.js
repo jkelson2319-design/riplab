@@ -1,7 +1,7 @@
 // Auto-generated RLFL (RipLab Football League) data: 10 teams x 8-player rosters.
 // Regenerate with gen_rlfl.py if you ever want a different league.
 var RLFL_TEAMS = [
-  "Blackrock Elk",
+  "San Diego Lightning",
   "Iron Bay Bison",
   "Golden Delta Ironclads",
   "Starlight Bluff Sentinels",
@@ -14,7 +14,7 @@ var RLFL_TEAMS = [
 ];
 
 var RLFL_ROSTER = {
-  "Blackrock Elk": [{name:"Cole Brannigan",pos:"QB",rookie:false}, {name:"Devon Novak",pos:"RB",rookie:false}, {name:"Griffin Zimmerman",pos:"WR",rookie:false}, {name:"Marcus Nakamura",pos:"WR",rookie:false}, {name:"Gunnar Prescott",pos:"TE",rookie:false}, {name:"Ronnie Monroe",pos:"OL",rookie:true}, {name:"Cade Jennings",pos:"DEF",rookie:false}, {name:"Zane Vasquez",pos:"DEF",rookie:false}],
+  "San Diego Lightning": [{name:"Justin Hayes",pos:"QB",rookie:true}, {name:"Devon Novak",pos:"RB",rookie:false}, {name:"Griffin Zimmerman",pos:"WR",rookie:false}, {name:"Marcus Nakamura",pos:"WR",rookie:false}, {name:"Gunnar Prescott",pos:"TE",rookie:false}, {name:"Ronnie Monroe",pos:"OL",rookie:false}, {name:"Cade Jennings",pos:"DEF",rookie:false}, {name:"Zane Vasquez",pos:"DEF",rookie:false}],
   "Iron Bay Bison": [{name:"Cade Marchetti",pos:"QB",rookie:false}, {name:"Silas Lockhart",pos:"RB",rookie:false}, {name:"Nolan Donovan",pos:"WR",rookie:false}, {name:"Stone Stanton",pos:"WR",rookie:false}, {name:"Cass Castellan",pos:"TE",rookie:false}, {name:"Marcus Dietrich",pos:"OL",rookie:false}, {name:"Darnell Zimmerman",pos:"DEF",rookie:true}, {name:"Colt Wexford",pos:"DEF",rookie:false}],
   "Golden Delta Ironclads": [{name:"Stone Yarborough",pos:"QB",rookie:false}, {name:"Trey Quintana",pos:"RB",rookie:false}, {name:"Dutch Torrance",pos:"WR",rookie:true}, {name:"Deshawn Drummond",pos:"WR",rookie:false}, {name:"Tyree Harkness",pos:"TE",rookie:false}, {name:"Marquis Ironside",pos:"OL",rookie:false}, {name:"Devon Bishara",pos:"DEF",rookie:false}, {name:"Tyree Eastwood",pos:"DEF",rookie:false}],
   "Starlight Bluff Sentinels": [{name:"Dutch Bramwell",pos:"QB",rookie:false}, {name:"Titus Brannigan",pos:"RB",rookie:false}, {name:"Percy Harkness",pos:"WR",rookie:false}, {name:"Kellen Ostrander",pos:"WR",rookie:false}, {name:"Lamar Nakamura",pos:"TE",rookie:false}, {name:"Otis Wexford",pos:"OL",rookie:true}, {name:"Ronnie Delgado",pos:"DEF",rookie:false}, {name:"Jaxon Okafor",pos:"DEF",rookie:false}],

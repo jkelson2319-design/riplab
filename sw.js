@@ -1,6 +1,6 @@
 // RipLab service worker — enables "install" + offline play.
 // Bump CACHE_NAME whenever you change any cached file so clients pick up the update.
-var CACHE_NAME = "riplab-v17";
+var CACHE_NAME = "riplab-v18";
 var CORE_ASSETS = [
   "./",
   "./index.html",
@@ -10,7 +10,8 @@ var CORE_ASSETS = [
   "./manifest.webmanifest",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
-  "./images/qb-chrome.jpg"
+  "./images/qb-chrome.jpg",
+  "./images/qb-justin-hayes.jpg"
 ];
 
 self.addEventListener("install", function (event) {

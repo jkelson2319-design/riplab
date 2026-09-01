@@ -514,9 +514,24 @@
   }
 
   // QBs get a real photo-based card template instead of the generic silhouette layout.
-  // The same photo is reused for every QB; a CSS filter retints it per parallel tier so
-  // rarity is still visible at a glance without needing a separate image per color.
+  // Most QBs share one generic photo, retinted per parallel tier via CSS filter so rarity
+  // is still visible without a separate image per color. A player can instead get their
+  // own art via QB_PLAYER_ART: `image` is a self-contained finished card design (team
+  // logo, name, and position already baked in by hand in Canva) reused across that
+  // player's tiers with the same CSS retint until real per-parallel art exists; `variants`
+  // lets a specific tag point at its own fully unique, finished art with no retint at all.
   var QB_CARD_IMAGE = "images/qb-chrome.jpg";
+  var QB_PLAYER_ART = {
+    "Justin Hayes": { image: "images/qb-justin-hayes.jpg", selfContained: true }
+  };
+  function qbArtFor(card) {
+    var art = QB_PLAYER_ART[card.player];
+    if (art && art.variants && card.tag && art.variants[card.tag]) {
+      return { src: art.variants[card.tag], selfContained: true, filter: "" };
+    }
+    if (art) return { src: art.image, selfContained: !!art.selfContained, filter: qbImageFilter(card.tag) };
+    return { src: QB_CARD_IMAGE, selfContained: false, filter: qbImageFilter(card.tag) };
+  }
   var QB_IMAGE_FILTER = {
     "Rookie Refractor": "sepia(.25) saturate(1.3) hue-rotate(-8deg)",
     "Green Refractor": "hue-rotate(100deg) saturate(1.4)",
@@ -536,15 +551,17 @@
   }
   function qbCardInnerHTML(card, isMine) {
     var badge = cardBadge(card);
-    var filter = qbImageFilter(card.tag);
+    var art = qbArtFor(card);
     var tagLabel = card.tag ? (card.tag.indexOf("Autograph") !== -1 ? "✎ " : "") + card.tag : badge.label;
     return (
-      '<div class="qb-card__imgwrap">' +
-        '<img class="qb-card__img" src="' + QB_CARD_IMAGE + '" alt=""' + (filter ? ' style="filter:' + filter + '"' : '') + '>' +
-        '<div class="qb-card__plate">' +
-          '<div class="qb-card__team' + (isMine ? ' mine' : '') + '">' + card.team + '</div>' +
-          '<div class="qb-card__player">' + card.player + '</div>' +
-        '</div>' +
+      '<div class="qb-card__imgwrap' + (art.selfContained ? ' qb-card__imgwrap--contain' : '') + '">' +
+        '<img class="qb-card__img" src="' + art.src + '" alt=""' + (art.filter ? ' style="filter:' + art.filter + '"' : '') + '>' +
+        (art.selfContained ? '' :
+          '<div class="qb-card__plate">' +
+            '<div class="qb-card__team' + (isMine ? ' mine' : '') + '">' + card.team + '</div>' +
+            '<div class="qb-card__player">' + card.player + '</div>' +
+          '</div>'
+        ) +
       '</div>' +
       '<div class="qb-card__footer">' +
         '<span class="rarity-tag" style="background:' + badge.color + '">' + tagLabel + '</span>' +
