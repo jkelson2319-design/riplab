@@ -648,6 +648,29 @@
         "Superfractor Autograph 1/1": "images/qb-omar-nichols-superfractor-auto.jpg",
         "Case Hit": "images/qb-omar-nichols-case-hit.jpg"
       }
+    },
+    "Jalen Cross": {
+      image: "images/qb-jalen-cross.jpg", selfContained: true,
+      variants: {
+        "Refractor": "images/qb-jalen-cross-refractor.jpg",
+        "Green Refractor": "images/qb-jalen-cross-green.jpg",
+        "Blue Refractor": "images/qb-jalen-cross-blue.jpg",
+        "Orange Refractor": "images/qb-jalen-cross-orange.jpg",
+        "Gold Refractor": "images/qb-jalen-cross-gold.jpg",
+        "Red Refractor": "images/qb-jalen-cross-red.jpg",
+        "Black Refractor": "images/qb-jalen-cross-black.jpg",
+        "Superfractor 1/1": "images/qb-jalen-cross-superfractor.jpg",
+        "Base Autograph": "images/qb-jalen-cross-base-auto.jpg",
+        "Refractor Autograph": "images/qb-jalen-cross-refractor-auto.jpg",
+        "Green Refractor Autograph": "images/qb-jalen-cross-green-auto.jpg",
+        "Blue Refractor Autograph": "images/qb-jalen-cross-blue-auto.jpg",
+        "Orange Refractor Autograph": "images/qb-jalen-cross-orange-auto.jpg",
+        "Gold Refractor Autograph": "images/qb-jalen-cross-gold-auto.jpg",
+        "Red Refractor Autograph": "images/qb-jalen-cross-red-auto.jpg",
+        "Black Refractor Autograph": "images/qb-jalen-cross-black-auto.jpg",
+        "Superfractor Autograph 1/1": "images/qb-jalen-cross-superfractor-auto.jpg",
+        "Case Hit": "images/qb-jalen-cross-case-hit.jpg"
+      }
     }
   };
   // Whether this card should use the photo template at all (vs. the generic silhouette).

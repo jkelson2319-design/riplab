@@ -1,6 +1,6 @@
 // RipLab service worker — enables "install" + offline play.
 // Bump CACHE_NAME whenever you change any cached file so clients pick up the update.
-var CACHE_NAME = "riplab-v28";
+var CACHE_NAME = "riplab-v29";
 var CORE_ASSETS = [
   "./",
   "./index.html",
@@ -48,7 +48,26 @@ var CORE_ASSETS = [
   "./images/qb-omar-nichols-superfractor.jpg",
   "./images/qb-omar-nichols-superfractor-auto.jpg",
   "./images/qb-omar-nichols-base-auto.jpg",
-  "./images/qb-omar-nichols-case-hit.jpg"
+  "./images/qb-omar-nichols-case-hit.jpg",
+  "./images/qb-jalen-cross.jpg",
+  "./images/qb-jalen-cross-refractor.jpg",
+  "./images/qb-jalen-cross-refractor-auto.jpg",
+  "./images/qb-jalen-cross-green.jpg",
+  "./images/qb-jalen-cross-green-auto.jpg",
+  "./images/qb-jalen-cross-blue.jpg",
+  "./images/qb-jalen-cross-blue-auto.jpg",
+  "./images/qb-jalen-cross-orange.jpg",
+  "./images/qb-jalen-cross-orange-auto.jpg",
+  "./images/qb-jalen-cross-gold.jpg",
+  "./images/qb-jalen-cross-gold-auto.jpg",
+  "./images/qb-jalen-cross-red.jpg",
+  "./images/qb-jalen-cross-red-auto.jpg",
+  "./images/qb-jalen-cross-black.jpg",
+  "./images/qb-jalen-cross-black-auto.jpg",
+  "./images/qb-jalen-cross-superfractor.jpg",
+  "./images/qb-jalen-cross-superfractor-auto.jpg",
+  "./images/qb-jalen-cross-base-auto.jpg",
+  "./images/qb-jalen-cross-case-hit.jpg"
 ];
 
 self.addEventListener("install", function (event) {
