@@ -219,7 +219,7 @@
       boxPrice: 250, casePrice: 3000, boxesPerCase: 12,
       packsPerBox: 6, cardsPerPack: 5, cardsPerBox: 30,
       blurb: "The main premium format — noticeably better refractor and autograph odds, one autograph guaranteed.",
-      valueScale: 1.40, guaranteedAutographs: 1,
+      valueScale: 1.40, guaranteedAutographs: 1, guaranteedCaseHit: true,
       caseHitP: 1 / 96, baseAutoP: 1 / 60, colorAutoP: 1 / 70,
       packOdds: { refractor: 2, green: 8, blue: 18, orange: 35, gold: 70, red: 175, black: 350, superfractor: 1750 }
     },
@@ -228,7 +228,7 @@
       boxPrice: 600, casePrice: 4800, boxesPerCase: 8,
       packsPerBox: 8, cardsPerPack: 6, cardsPerBox: 48,
       blurb: "The most loaded format on the shelf — a refractor in every pack and two autographs guaranteed.",
-      valueScale: 1.90, guaranteedAutographs: 2,
+      valueScale: 1.90, guaranteedAutographs: 2, guaranteedCaseHit: true,
       caseHitP: 1 / 60, baseAutoP: 1 / 40, colorAutoP: 1 / 35,
       packOdds: { refractor: 1, green: 5, blue: 10, orange: 20, gold: 40, red: 100, black: 200, superfractor: 1000 }
     }
@@ -376,9 +376,21 @@
     return packs.map(function (p) { return { cards: p.cards, revealedCount: 0, torn: false }; });
   }
 
+  // Case-level guarantee (Hobby/Jumbo only) — separate from the per-box autograph
+  // guarantee above, and only enforced when a *whole case* is being generated (boxCount
+  // matches boxesPerCase), never for a single box purchase.
   function generatePacks(format, boxCount) {
     var all = [];
     for (var i = 0; i < boxCount; i++) all = all.concat(generateBoxPacks(format));
+    if (format.guaranteedCaseHit && boxCount === format.boxesPerCase) {
+      var hasCaseHit = all.some(function (pack) {
+        return pack.cards.some(function (c) { return c.tag === "Case Hit"; });
+      });
+      if (!hasCaseHit) {
+        var pack = pick(all);
+        pack.cards[format.cardsPerPack - 1] = makeHitCard(format, "Case Hit", false);
+      }
+    }
     return all;
   }
 
@@ -521,7 +533,11 @@
         })
       )
     );
-    var caseHitChips = oddsChipsHTML(["Case Hit 1:" + Math.round(1 / f.caseHitP).toLocaleString()]);
+    var caseHitChips = oddsChipsHTML(
+      ["Case Hit 1:" + Math.round(1 / f.caseHitP).toLocaleString()].concat(
+        f.guaranteedCaseHit ? ["Guaranteed 1 per case"] : []
+      )
+    );
     return (
       oddsGroup("Parallels", parallelChips) +
       oddsGroup("Autograph Chase", autoChips) +
@@ -562,7 +578,8 @@
             '<p>' + f.blurb + '</p>' +
             '<p class="section-sub">' + f.packsPerBox + ' packs/box (' + f.cardsPerPack + ' cards each = ' + f.cardsPerBox + ') · ' +
               f.boxesPerCase + ' boxes/case (' + money(f.casePrice) + ') · ' + TEAMS.length + '-team checklist' +
-              (f.guaranteedAutographs ? ' · guaranteed ' + f.guaranteedAutographs + ' autograph' + (f.guaranteedAutographs > 1 ? 's' : '') + '/box' : '') + '</p>' +
+              (f.guaranteedAutographs ? ' · guaranteed ' + f.guaranteedAutographs + ' autograph' + (f.guaranteedAutographs > 1 ? 's' : '') + '/box' : '') +
+              (f.guaranteedCaseHit ? ' · guaranteed Case Hit/case' : '') + '</p>' +
             '<button class="btn btn-odds-toggle" data-odds-toggle="' + f.id + '">Show Hit Odds ▾</button>' +
             '<div class="odds-groups" id="odds-' + f.id + '" hidden>' + oddsGroupsHTML(f) + '</div>' +
             '<div class="break-card__foot">' + btn + '</div>' +
