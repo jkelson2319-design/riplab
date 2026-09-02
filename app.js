@@ -572,15 +572,18 @@
     }).join("");
   }
 
-  // QBs get a real photo-based card template instead of the generic silhouette layout.
-  // Most QBs share one generic photo, retinted per parallel tier via CSS filter so rarity
-  // is still visible without a separate image per color. A player can instead get their
-  // own art via QB_PLAYER_ART: `image` is a self-contained finished card design (team
-  // logo, name, and position already baked in by hand in Canva) reused across that
-  // player's tiers with the same CSS retint until real per-parallel art exists; `variants`
-  // lets a specific tag point at its own fully unique, finished art with no retint at all.
+  // Any player with real art gets a photo-based card template instead of the generic
+  // silhouette layout — this isn't QB-exclusive, it applies to whoever has an entry in
+  // PLAYER_ART. QBs without their own art still fall back to one shared generic photo,
+  // retinted per parallel tier via CSS filter; other positions have no such shared photo
+  // (there's no single generic "RB"/"WR" stock shot wired up), so they simply stay on the
+  // silhouette template until they get real art. Per player, `image` is a self-contained
+  // finished card design (team logo, name, and position baked in by hand in Canva) reused
+  // across that player's tiers with the same CSS retint until real per-parallel art
+  // exists; `variants` lets a specific tag point at its own fully unique, finished art
+  // with no retint at all.
   var QB_CARD_IMAGE = "images/qb-chrome.jpg";
-  var QB_PLAYER_ART = {
+  var PLAYER_ART = {
     "Justin Hayes": {
       image: "images/qb-justin-hayes.jpg", selfContained: true,
       // Real per-parallel art — every tier is covered now, no CSS-retint fallback needed.
@@ -604,17 +607,45 @@
         "Superfractor Autograph 1/1": "images/qb-justin-hayes-superfractor-auto.jpg",
         "Case Hit": "images/qb-justin-hayes-case-hit.jpg"
       }
+    },
+    "Omar Nichols": {
+      image: "images/qb-omar-nichols.jpg", selfContained: true,
+      // Real per-parallel art — every tier is covered now, no CSS-retint fallback needed.
+      variants: {
+        "Refractor": "images/qb-omar-nichols-refractor.jpg",
+        "Green Refractor": "images/qb-omar-nichols-green.jpg",
+        "Blue Refractor": "images/qb-omar-nichols-blue.jpg",
+        "Orange Refractor": "images/qb-omar-nichols-orange.jpg",
+        "Gold Refractor": "images/qb-omar-nichols-gold.jpg",
+        "Red Refractor": "images/qb-omar-nichols-red.jpg",
+        "Black Refractor": "images/qb-omar-nichols-black.jpg",
+        "Superfractor 1/1": "images/qb-omar-nichols-superfractor.jpg",
+        "Base Autograph": "images/qb-omar-nichols-base-auto.jpg",
+        "Refractor Autograph": "images/qb-omar-nichols-refractor-auto.jpg",
+        "Green Refractor Autograph": "images/qb-omar-nichols-green-auto.jpg",
+        "Blue Refractor Autograph": "images/qb-omar-nichols-blue-auto.jpg",
+        "Orange Refractor Autograph": "images/qb-omar-nichols-orange-auto.jpg",
+        "Gold Refractor Autograph": "images/qb-omar-nichols-gold-auto.jpg",
+        "Red Refractor Autograph": "images/qb-omar-nichols-red-auto.jpg",
+        "Black Refractor Autograph": "images/qb-omar-nichols-black-auto.jpg",
+        "Superfractor Autograph 1/1": "images/qb-omar-nichols-superfractor-auto.jpg",
+        "Case Hit": "images/qb-omar-nichols-case-hit.jpg"
+      }
     }
   };
-  function qbArtFor(card) {
-    var art = QB_PLAYER_ART[card.player];
+  // Whether this card should use the photo template at all (vs. the generic silhouette).
+  function hasPhotoArt(card) {
+    return !!PLAYER_ART[card.player] || card.pos === "QB";
+  }
+  function photoArtFor(card) {
+    var art = PLAYER_ART[card.player];
     if (art && art.variants && card.tag && art.variants[card.tag]) {
       return { src: art.variants[card.tag], selfContained: true, filter: "" };
     }
-    if (art) return { src: art.image, selfContained: !!art.selfContained, filter: qbImageFilter(card.tag) };
-    return { src: QB_CARD_IMAGE, selfContained: false, filter: qbImageFilter(card.tag) };
+    if (art) return { src: art.image, selfContained: !!art.selfContained, filter: photoImageFilter(card.tag) };
+    return { src: QB_CARD_IMAGE, selfContained: false, filter: photoImageFilter(card.tag) };
   }
-  var QB_IMAGE_FILTER = {
+  var PHOTO_TINT_FILTER = {
     "Green Refractor": "hue-rotate(100deg) saturate(1.4)",
     "Blue Refractor": "hue-rotate(190deg) saturate(1.3)",
     "Orange Refractor": "hue-rotate(-40deg) saturate(1.5) brightness(1.05)",
@@ -624,14 +655,14 @@
     "Superfractor 1/1": "saturate(2.2) contrast(1.15) brightness(1.05)",
     "Case Hit": "hue-rotate(250deg) saturate(1.5) brightness(.9)"
   };
-  function qbImageFilter(tag) {
+  function photoImageFilter(tag) {
     if (!tag) return "";
-    if (tag === "Case Hit") return QB_IMAGE_FILTER["Case Hit"];
+    if (tag === "Case Hit") return PHOTO_TINT_FILTER["Case Hit"];
     var key = tierValueKey(tag);
-    return (key && QB_IMAGE_FILTER[key]) || "";
+    return (key && PHOTO_TINT_FILTER[key]) || "";
   }
-  function qbCardInnerHTML(card, isMine) {
-    var art = qbArtFor(card);
+  function photoCardInnerHTML(card, isMine) {
+    var art = photoArtFor(card);
     return (
       '<div class="qb-card__imgwrap' + (art.selfContained ? ' qb-card__imgwrap--contain' : '') + '">' +
         '<img class="qb-card__img" src="' + art.src + '" alt=""' + (art.filter ? ' style="filter:' + art.filter + '"' : '') + '>' +
@@ -661,13 +692,13 @@
 
   function cardFaceClasses(card, isMine, size) {
     return "card-face" + (size ? " card-face--" + size : "") + (isMine ? " mine" : "") +
-      (card.pos === "QB" ? " qb-card" : "") +
+      (hasPhotoArt(card) ? " qb-card" : "") +
       (card.tag ? " legendary" : "") + (REFRACTOR_COLORS[card.tag] ? " refractor" : "") +
       (card.isMega ? " mega-hit" : "");
   }
 
   function cardInnerHTML(card, isMine) {
-    if (card.pos === "QB") return qbCardInnerHTML(card, isMine);
+    if (hasPhotoArt(card)) return photoCardInnerHTML(card, isMine);
     return (
       '<div class="card-face__topbar">' +
         '<span class="rlfl-crest">RLFL</span>' +
@@ -686,7 +717,7 @@
 
   // The card box itself — just the art/identity, no rarity or price on it.
   function cardFaceHTML(card, isMine, size) {
-    var refractorBg = card.pos === "QB" ? null : REFRACTOR_COLORS[card.tag];
+    var refractorBg = hasPhotoArt(card) ? null : REFRACTOR_COLORS[card.tag];
     var styleAttr = refractorBg ? ' style="background:' + refractorBg + '"' : '';
     return '<div class="' + cardFaceClasses(card, isMine, size) + '"' + styleAttr + '>' + cardInnerHTML(card, isMine) + '</div>';
   }

@@ -1,6 +1,6 @@
 // RipLab service worker — enables "install" + offline play.
 // Bump CACHE_NAME whenever you change any cached file so clients pick up the update.
-var CACHE_NAME = "riplab-v24";
+var CACHE_NAME = "riplab-v25";
 var CORE_ASSETS = [
   "./",
   "./index.html",
@@ -29,7 +29,26 @@ var CORE_ASSETS = [
   "./images/qb-justin-hayes-superfractor.jpg",
   "./images/qb-justin-hayes-superfractor-auto.jpg",
   "./images/qb-justin-hayes-base-auto.jpg",
-  "./images/qb-justin-hayes-case-hit.jpg"
+  "./images/qb-justin-hayes-case-hit.jpg",
+  "./images/qb-omar-nichols.jpg",
+  "./images/qb-omar-nichols-refractor.jpg",
+  "./images/qb-omar-nichols-refractor-auto.jpg",
+  "./images/qb-omar-nichols-green.jpg",
+  "./images/qb-omar-nichols-green-auto.jpg",
+  "./images/qb-omar-nichols-blue.jpg",
+  "./images/qb-omar-nichols-blue-auto.jpg",
+  "./images/qb-omar-nichols-orange.jpg",
+  "./images/qb-omar-nichols-orange-auto.jpg",
+  "./images/qb-omar-nichols-gold.jpg",
+  "./images/qb-omar-nichols-gold-auto.jpg",
+  "./images/qb-omar-nichols-red.jpg",
+  "./images/qb-omar-nichols-red-auto.jpg",
+  "./images/qb-omar-nichols-black.jpg",
+  "./images/qb-omar-nichols-black-auto.jpg",
+  "./images/qb-omar-nichols-superfractor.jpg",
+  "./images/qb-omar-nichols-superfractor-auto.jpg",
+  "./images/qb-omar-nichols-base-auto.jpg",
+  "./images/qb-omar-nichols-case-hit.jpg"
 ];
 
 self.addEventListener("install", function (event) {
