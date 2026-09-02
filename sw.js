@@ -1,6 +1,6 @@
 // RipLab service worker — enables "install" + offline play.
 // Bump CACHE_NAME whenever you change any cached file so clients pick up the update.
-var CACHE_NAME = "riplab-v29";
+var CACHE_NAME = "riplab-v30";
 var CORE_ASSETS = [
   "./",
   "./index.html",
@@ -67,7 +67,26 @@ var CORE_ASSETS = [
   "./images/qb-jalen-cross-superfractor.jpg",
   "./images/qb-jalen-cross-superfractor-auto.jpg",
   "./images/qb-jalen-cross-base-auto.jpg",
-  "./images/qb-jalen-cross-case-hit.jpg"
+  "./images/qb-jalen-cross-case-hit.jpg",
+  "./images/qb-theo-mercer.jpg",
+  "./images/qb-theo-mercer-refractor.jpg",
+  "./images/qb-theo-mercer-refractor-auto.jpg",
+  "./images/qb-theo-mercer-green.jpg",
+  "./images/qb-theo-mercer-green-auto.jpg",
+  "./images/qb-theo-mercer-blue.jpg",
+  "./images/qb-theo-mercer-blue-auto.jpg",
+  "./images/qb-theo-mercer-orange.jpg",
+  "./images/qb-theo-mercer-orange-auto.jpg",
+  "./images/qb-theo-mercer-gold.jpg",
+  "./images/qb-theo-mercer-gold-auto.jpg",
+  "./images/qb-theo-mercer-red.jpg",
+  "./images/qb-theo-mercer-red-auto.jpg",
+  "./images/qb-theo-mercer-black.jpg",
+  "./images/qb-theo-mercer-black-auto.jpg",
+  "./images/qb-theo-mercer-superfractor.jpg",
+  "./images/qb-theo-mercer-superfractor-auto.jpg",
+  "./images/qb-theo-mercer-base-auto.jpg",
+  "./images/qb-theo-mercer-case-hit.jpg"
 ];
 
 self.addEventListener("install", function (event) {

@@ -671,6 +671,29 @@
         "Superfractor Autograph 1/1": "images/qb-jalen-cross-superfractor-auto.jpg",
         "Case Hit": "images/qb-jalen-cross-case-hit.jpg"
       }
+    },
+    "Theo Mercer": {
+      image: "images/qb-theo-mercer.jpg", selfContained: true,
+      variants: {
+        "Refractor": "images/qb-theo-mercer-refractor.jpg",
+        "Green Refractor": "images/qb-theo-mercer-green.jpg",
+        "Blue Refractor": "images/qb-theo-mercer-blue.jpg",
+        "Orange Refractor": "images/qb-theo-mercer-orange.jpg",
+        "Gold Refractor": "images/qb-theo-mercer-gold.jpg",
+        "Red Refractor": "images/qb-theo-mercer-red.jpg",
+        "Black Refractor": "images/qb-theo-mercer-black.jpg",
+        "Superfractor 1/1": "images/qb-theo-mercer-superfractor.jpg",
+        "Base Autograph": "images/qb-theo-mercer-base-auto.jpg",
+        "Refractor Autograph": "images/qb-theo-mercer-refractor-auto.jpg",
+        "Green Refractor Autograph": "images/qb-theo-mercer-green-auto.jpg",
+        "Blue Refractor Autograph": "images/qb-theo-mercer-blue-auto.jpg",
+        "Orange Refractor Autograph": "images/qb-theo-mercer-orange-auto.jpg",
+        "Gold Refractor Autograph": "images/qb-theo-mercer-gold-auto.jpg",
+        "Red Refractor Autograph": "images/qb-theo-mercer-red-auto.jpg",
+        "Black Refractor Autograph": "images/qb-theo-mercer-black-auto.jpg",
+        "Superfractor Autograph 1/1": "images/qb-theo-mercer-superfractor-auto.jpg",
+        "Case Hit": "images/qb-theo-mercer-case-hit.jpg"
+      }
     }
   };
   // Whether this card should use the photo template at all (vs. the generic silhouette).

@@ -14,7 +14,7 @@ var RLFL_TEAMS = [
 ];
 
 var RLFL_ROSTER = {
-  "San Diego Lightning": [{name:"Justin Hayes",pos:"QB",rookie:true}, {name:"Omar Nichols",pos:"RB",rookie:false}, {name:"Jalen Cross",pos:"WR",rookie:false}, {name:"Marcus Nakamura",pos:"TE",rookie:false}, {name:"Gunnar Prescott",pos:"DEF",rookie:false}],
+  "San Diego Lightning": [{name:"Justin Hayes",pos:"QB",rookie:true}, {name:"Omar Nichols",pos:"RB",rookie:false}, {name:"Jalen Cross",pos:"WR",rookie:false}, {name:"Theo Mercer",pos:"TE",rookie:false}, {name:"Gunnar Prescott",pos:"DEF",rookie:false}],
   "Iron Bay Bison": [{name:"Ronnie Monroe",pos:"QB",rookie:false}, {name:"Cade Jennings",pos:"RB",rookie:false}, {name:"Zane Vasquez",pos:"WR",rookie:false}, {name:"Cade Marchetti",pos:"TE",rookie:false}, {name:"Silas Lockhart",pos:"DEF",rookie:true}],
   "Golden Delta Ironclads": [{name:"Nolan Donovan",pos:"QB",rookie:false}, {name:"Stone Stanton",pos:"RB",rookie:false}, {name:"Cass Castellan",pos:"WR",rookie:false}, {name:"Marcus Dietrich",pos:"TE",rookie:false}, {name:"Darnell Zimmerman",pos:"DEF",rookie:true}],
   "Starlight Bluff Sentinels": [{name:"Colt Wexford",pos:"QB",rookie:false}, {name:"Stone Yarborough",pos:"RB",rookie:false}, {name:"Trey Quintana",pos:"WR",rookie:true}, {name:"Dutch Torrance",pos:"TE",rookie:false}, {name:"Deshawn Drummond",pos:"DEF",rookie:false}],
