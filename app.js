@@ -694,6 +694,29 @@
         "Superfractor Autograph 1/1": "images/qb-theo-mercer-superfractor-auto.jpg",
         "Case Hit": "images/qb-theo-mercer-case-hit.jpg"
       }
+    },
+    "Malcolm Price": {
+      image: "images/qb-malcolm-price.jpg", selfContained: true,
+      variants: {
+        "Refractor": "images/qb-malcolm-price-refractor.jpg",
+        "Green Refractor": "images/qb-malcolm-price-green.jpg",
+        "Blue Refractor": "images/qb-malcolm-price-blue.jpg",
+        "Orange Refractor": "images/qb-malcolm-price-orange.jpg",
+        "Gold Refractor": "images/qb-malcolm-price-gold.jpg",
+        "Red Refractor": "images/qb-malcolm-price-red.jpg",
+        "Black Refractor": "images/qb-malcolm-price-black.jpg",
+        "Superfractor 1/1": "images/qb-malcolm-price-superfractor.jpg",
+        "Base Autograph": "images/qb-malcolm-price-base-auto.jpg",
+        "Refractor Autograph": "images/qb-malcolm-price-refractor-auto.jpg",
+        "Green Refractor Autograph": "images/qb-malcolm-price-green-auto.jpg",
+        "Blue Refractor Autograph": "images/qb-malcolm-price-blue-auto.jpg",
+        "Orange Refractor Autograph": "images/qb-malcolm-price-orange-auto.jpg",
+        "Gold Refractor Autograph": "images/qb-malcolm-price-gold-auto.jpg",
+        "Red Refractor Autograph": "images/qb-malcolm-price-red-auto.jpg",
+        "Black Refractor Autograph": "images/qb-malcolm-price-black-auto.jpg",
+        "Superfractor Autograph 1/1": "images/qb-malcolm-price-superfractor-auto.jpg",
+        "Case Hit": "images/qb-malcolm-price-case-hit.jpg"
+      }
     }
   };
   // Whether this card should use the photo template at all (vs. the generic silhouette).

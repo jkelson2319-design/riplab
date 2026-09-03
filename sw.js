@@ -1,6 +1,6 @@
 // RipLab service worker — enables "install" + offline play.
 // Bump CACHE_NAME whenever you change any cached file so clients pick up the update.
-var CACHE_NAME = "riplab-v30";
+var CACHE_NAME = "riplab-v31";
 var CORE_ASSETS = [
   "./",
   "./index.html",
@@ -86,7 +86,26 @@ var CORE_ASSETS = [
   "./images/qb-theo-mercer-superfractor.jpg",
   "./images/qb-theo-mercer-superfractor-auto.jpg",
   "./images/qb-theo-mercer-base-auto.jpg",
-  "./images/qb-theo-mercer-case-hit.jpg"
+  "./images/qb-theo-mercer-case-hit.jpg",
+  "./images/qb-malcolm-price.jpg",
+  "./images/qb-malcolm-price-refractor.jpg",
+  "./images/qb-malcolm-price-refractor-auto.jpg",
+  "./images/qb-malcolm-price-green.jpg",
+  "./images/qb-malcolm-price-green-auto.jpg",
+  "./images/qb-malcolm-price-blue.jpg",
+  "./images/qb-malcolm-price-blue-auto.jpg",
+  "./images/qb-malcolm-price-orange.jpg",
+  "./images/qb-malcolm-price-orange-auto.jpg",
+  "./images/qb-malcolm-price-gold.jpg",
+  "./images/qb-malcolm-price-gold-auto.jpg",
+  "./images/qb-malcolm-price-red.jpg",
+  "./images/qb-malcolm-price-red-auto.jpg",
+  "./images/qb-malcolm-price-black.jpg",
+  "./images/qb-malcolm-price-black-auto.jpg",
+  "./images/qb-malcolm-price-superfractor.jpg",
+  "./images/qb-malcolm-price-superfractor-auto.jpg",
+  "./images/qb-malcolm-price-base-auto.jpg",
+  "./images/qb-malcolm-price-case-hit.jpg"
 ];
 
 self.addEventListener("install", function (event) {
