@@ -15,7 +15,7 @@ var RLFL_TEAMS = [
 
 var RLFL_ROSTER = {
   "San Diego Lightning": [{name:"Justin Hayes",pos:"QB",rookie:true}, {name:"Omar Nichols",pos:"RB",rookie:false}, {name:"Jalen Cross",pos:"WR",rookie:false}, {name:"Theo Mercer",pos:"TE",rookie:false}, {name:"Malcolm Price",pos:"DEF",rookie:false}],
-  "New York Monsters": [{name:"Jett Jones",pos:"QB",rookie:false}, {name:"Cal Braddock",pos:"RB",rookie:false}, {name:"Malachi Naylor",pos:"WR",rookie:false}, {name:"Roman Ranson",pos:"TE",rookie:false}, {name:"Taylor Lease",pos:"DEF",rookie:true}],
+  "New York Monsters": [{name:"Jett Jones",pos:"QB",rookie:false}, {name:"Cal Braddock",pos:"RB",rookie:false}, {name:"Malachi Naylor",pos:"WR",rookie:false}, {name:"Roman Ranson",pos:"TE",rookie:false}, {name:"Taylor Lease",pos:"DEF",rookie:false}],
   "Golden Delta Ironclads": [{name:"Nolan Donovan",pos:"QB",rookie:false}, {name:"Stone Stanton",pos:"RB",rookie:false}, {name:"Cass Castellan",pos:"WR",rookie:false}, {name:"Marcus Dietrich",pos:"TE",rookie:false}, {name:"Darnell Zimmerman",pos:"DEF",rookie:true}],
   "Starlight Bluff Sentinels": [{name:"Colt Wexford",pos:"QB",rookie:false}, {name:"Stone Yarborough",pos:"RB",rookie:false}, {name:"Trey Quintana",pos:"WR",rookie:true}, {name:"Dutch Torrance",pos:"TE",rookie:false}, {name:"Deshawn Drummond",pos:"DEF",rookie:false}],
   "Ironwood Bandits": [{name:"Tyree Harkness",pos:"QB",rookie:false}, {name:"Marquis Ironside",pos:"RB",rookie:false}, {name:"Devon Bishara",pos:"WR",rookie:false}, {name:"Tyree Eastwood",pos:"TE",rookie:true}, {name:"Dutch Bramwell",pos:"DEF",rookie:false}],
