@@ -717,6 +717,121 @@
         "Superfractor Autograph 1/1": "images/qb-malcolm-price-superfractor-auto.jpg",
         "Case Hit": "images/qb-malcolm-price-case-hit.jpg"
       }
+    },
+    "Jett Jones": {
+      image: "images/qb-jett-jones.jpg", selfContained: true,
+      variants: {
+        "Refractor": "images/qb-jett-jones-refractor.jpg",
+        "Green Refractor": "images/qb-jett-jones-green.jpg",
+        "Blue Refractor": "images/qb-jett-jones-blue.jpg",
+        "Orange Refractor": "images/qb-jett-jones-orange.jpg",
+        "Gold Refractor": "images/qb-jett-jones-gold.jpg",
+        "Red Refractor": "images/qb-jett-jones-red.jpg",
+        "Black Refractor": "images/qb-jett-jones-black.jpg",
+        "Superfractor 1/1": "images/qb-jett-jones-superfractor.jpg",
+        "Base Autograph": "images/qb-jett-jones-base-auto.jpg",
+        "Refractor Autograph": "images/qb-jett-jones-refractor-auto.jpg",
+        "Green Refractor Autograph": "images/qb-jett-jones-green-auto.jpg",
+        "Blue Refractor Autograph": "images/qb-jett-jones-blue-auto.jpg",
+        "Orange Refractor Autograph": "images/qb-jett-jones-orange-auto.jpg",
+        "Gold Refractor Autograph": "images/qb-jett-jones-gold-auto.jpg",
+        "Red Refractor Autograph": "images/qb-jett-jones-red-auto.jpg",
+        "Black Refractor Autograph": "images/qb-jett-jones-black-auto.jpg",
+        "Superfractor Autograph 1/1": "images/qb-jett-jones-superfractor-auto.jpg",
+        "Case Hit": "images/qb-jett-jones-case-hit.jpg"
+      }
+    },
+    "Cal Braddock": {
+      image: "images/qb-cal-braddock.jpg", selfContained: true,
+      variants: {
+        "Refractor": "images/qb-cal-braddock-refractor.jpg",
+        "Green Refractor": "images/qb-cal-braddock-green.jpg",
+        "Blue Refractor": "images/qb-cal-braddock-blue.jpg",
+        "Orange Refractor": "images/qb-cal-braddock-orange.jpg",
+        "Gold Refractor": "images/qb-cal-braddock-gold.jpg",
+        "Red Refractor": "images/qb-cal-braddock-red.jpg",
+        "Black Refractor": "images/qb-cal-braddock-black.jpg",
+        "Superfractor 1/1": "images/qb-cal-braddock-superfractor.jpg",
+        "Base Autograph": "images/qb-cal-braddock-base-auto.jpg",
+        "Refractor Autograph": "images/qb-cal-braddock-refractor-auto.jpg",
+        "Green Refractor Autograph": "images/qb-cal-braddock-green-auto.jpg",
+        "Blue Refractor Autograph": "images/qb-cal-braddock-blue-auto.jpg",
+        "Orange Refractor Autograph": "images/qb-cal-braddock-orange-auto.jpg",
+        "Gold Refractor Autograph": "images/qb-cal-braddock-gold-auto.jpg",
+        "Red Refractor Autograph": "images/qb-cal-braddock-red-auto.jpg",
+        "Black Refractor Autograph": "images/qb-cal-braddock-black-auto.jpg",
+        "Superfractor Autograph 1/1": "images/qb-cal-braddock-superfractor-auto.jpg",
+        "Case Hit": "images/qb-cal-braddock-case-hit.jpg"
+      }
+    },
+    "Malachi Naylor": {
+      image: "images/qb-malachi-naylor.jpg", selfContained: true,
+      variants: {
+        "Refractor": "images/qb-malachi-naylor-refractor.jpg",
+        "Green Refractor": "images/qb-malachi-naylor-green.jpg",
+        "Blue Refractor": "images/qb-malachi-naylor-blue.jpg",
+        "Orange Refractor": "images/qb-malachi-naylor-orange.jpg",
+        "Gold Refractor": "images/qb-malachi-naylor-gold.jpg",
+        "Red Refractor": "images/qb-malachi-naylor-red.jpg",
+        "Black Refractor": "images/qb-malachi-naylor-black.jpg",
+        "Superfractor 1/1": "images/qb-malachi-naylor-superfractor.jpg",
+        "Base Autograph": "images/qb-malachi-naylor-base-auto.jpg",
+        "Refractor Autograph": "images/qb-malachi-naylor-refractor-auto.jpg",
+        "Green Refractor Autograph": "images/qb-malachi-naylor-green-auto.jpg",
+        "Blue Refractor Autograph": "images/qb-malachi-naylor-blue-auto.jpg",
+        "Orange Refractor Autograph": "images/qb-malachi-naylor-orange-auto.jpg",
+        "Gold Refractor Autograph": "images/qb-malachi-naylor-gold-auto.jpg",
+        "Red Refractor Autograph": "images/qb-malachi-naylor-red-auto.jpg",
+        "Black Refractor Autograph": "images/qb-malachi-naylor-black-auto.jpg",
+        "Superfractor Autograph 1/1": "images/qb-malachi-naylor-superfractor-auto.jpg",
+        "Case Hit": "images/qb-malachi-naylor-case-hit.jpg"
+      }
+    },
+    "Roman Ranson": {
+      image: "images/qb-roman-ranson.jpg", selfContained: true,
+      variants: {
+        "Refractor": "images/qb-roman-ranson-refractor.jpg",
+        "Green Refractor": "images/qb-roman-ranson-green.jpg",
+        "Blue Refractor": "images/qb-roman-ranson-blue.jpg",
+        "Orange Refractor": "images/qb-roman-ranson-orange.jpg",
+        "Gold Refractor": "images/qb-roman-ranson-gold.jpg",
+        "Red Refractor": "images/qb-roman-ranson-red.jpg",
+        "Black Refractor": "images/qb-roman-ranson-black.jpg",
+        "Superfractor 1/1": "images/qb-roman-ranson-superfractor.jpg",
+        "Base Autograph": "images/qb-roman-ranson-base-auto.jpg",
+        "Refractor Autograph": "images/qb-roman-ranson-refractor-auto.jpg",
+        "Green Refractor Autograph": "images/qb-roman-ranson-green-auto.jpg",
+        "Blue Refractor Autograph": "images/qb-roman-ranson-blue-auto.jpg",
+        "Orange Refractor Autograph": "images/qb-roman-ranson-orange-auto.jpg",
+        "Gold Refractor Autograph": "images/qb-roman-ranson-gold-auto.jpg",
+        "Red Refractor Autograph": "images/qb-roman-ranson-red-auto.jpg",
+        "Black Refractor Autograph": "images/qb-roman-ranson-black-auto.jpg",
+        "Superfractor Autograph 1/1": "images/qb-roman-ranson-superfractor-auto.jpg",
+        "Case Hit": "images/qb-roman-ranson-case-hit.jpg"
+      }
+    },
+    "Taylor Lease": {
+      image: "images/qb-taylor-lease.jpg", selfContained: true,
+      variants: {
+        "Refractor": "images/qb-taylor-lease-refractor.jpg",
+        "Green Refractor": "images/qb-taylor-lease-green.jpg",
+        "Blue Refractor": "images/qb-taylor-lease-blue.jpg",
+        "Orange Refractor": "images/qb-taylor-lease-orange.jpg",
+        "Gold Refractor": "images/qb-taylor-lease-gold.jpg",
+        "Red Refractor": "images/qb-taylor-lease-red.jpg",
+        "Black Refractor": "images/qb-taylor-lease-black.jpg",
+        "Superfractor 1/1": "images/qb-taylor-lease-superfractor.jpg",
+        "Base Autograph": "images/qb-taylor-lease-base-auto.jpg",
+        "Refractor Autograph": "images/qb-taylor-lease-refractor-auto.jpg",
+        "Green Refractor Autograph": "images/qb-taylor-lease-green-auto.jpg",
+        "Blue Refractor Autograph": "images/qb-taylor-lease-blue-auto.jpg",
+        "Orange Refractor Autograph": "images/qb-taylor-lease-orange-auto.jpg",
+        "Gold Refractor Autograph": "images/qb-taylor-lease-gold-auto.jpg",
+        "Red Refractor Autograph": "images/qb-taylor-lease-red-auto.jpg",
+        "Black Refractor Autograph": "images/qb-taylor-lease-black-auto.jpg",
+        "Superfractor Autograph 1/1": "images/qb-taylor-lease-superfractor-auto.jpg",
+        "Case Hit": "images/qb-taylor-lease-case-hit.jpg"
+      }
     }
   };
   // Whether this card should use the photo template at all (vs. the generic silhouette).
