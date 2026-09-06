@@ -1115,28 +1115,27 @@
   }
 
   // The pull reveal is meant to be the biggest moment in the app, so the front card is
-  // sized well above every other card display; peeks behind it use a much smaller offset
-  // than the card's own size so a full pack (up to 6 cards) never overflows a phone screen.
-  // The front card fills most of the screen (sized in CSS via min(84vw, 400px), see
-  // .card-frame--stack) since this is the actual "pull" moment. STACK_PEEK_BUFFER is extra
-  // room reserved in the wrap, beyond the front card's own width, purely so the rest of the
-  // pack can peek out from behind it at a small fixed offset; the front card itself stays
-  // horizontally centered in that wrap by shifting every item right by half the buffer.
+  // sized well above every other card display (see .card-frame--stack, which uses the same
+  // min(62vw, 300px) formula as frontCardWidthPx below — keep them in sync). Peeks behind
+  // it use a much smaller fixed offset than the card's own size.
   var STACK_PEEK_OFFSET = 10;
-  var STACK_PEEK_BUFFER = 40;
+  function frontCardWidthPx() { return Math.min(window.innerWidth * 0.62, 300); }
 
-  // A stacked deck: the current card sits fully visible at front (center), the rest of the
+  // A stacked deck: the current card sits fully visible at front (left), the rest of the
   // pack peeks out behind/to the right just enough to hint at its color (so a refractor
   // sheen or autograph gold is visible before you get to it). Tapping the button takes it
   // and reveals the next one. Only the front card gets a caption (parallel + price) —
-  // peeking cards stay a mystery until they're revealed.
+  // peeking cards stay a mystery until they're revealed. The wrap's width is set to exactly
+  // the front card's width plus however many peeks are actually behind it — never more —
+  // so the stage's dark background is never exposed next to the cards (a wider "buffer" for
+  // centering the front card used to leave a visible gap there mid fly-away animation).
   function packStackHTML(ab, pack) {
     var wholeBox = ab.yourTeam === null;
     var remaining = pack.cards.slice(pack.revealedCount);
-    var centerShift = STACK_PEEK_BUFFER / 2;
+    var wrapWidth = frontCardWidthPx() + Math.max(0, remaining.length - 1) * STACK_PEEK_OFFSET;
     var items = remaining.map(function (card, k) {
       var isMine = wholeBox || card.team === ab.yourTeam;
-      var tx = centerShift + k * STACK_PEEK_OFFSET;
+      var tx = k * STACK_PEEK_OFFSET;
       var rot = (k * 2).toFixed(1);
       var z = remaining.length - k;
       var base = "translate(" + tx + "px, 0) rotate(" + rot + "deg)";
@@ -1151,7 +1150,7 @@
       '<div class="stage stack-stage" id="stageEl">' +
         '<div class="stage-flash"></div>' +
         '<div class="pack-progress">Pack ' + (ab.currentPackIndex + 1) + ' · card ' + (pack.revealedCount + 1) + ' of ' + pack.cards.length + '</div>' +
-        '<div class="stack-wrap" id="stackWrap">' + items + '</div>' +
+        '<div class="stack-wrap" id="stackWrap" style="width:' + wrapWidth + 'px;">' + items + '</div>' +
         '<button class="btn btn-primary" id="nextCardBtn">Next Card ↑</button>' +
         '<p class="stack-hint">Tap the button to see the next card.</p>' +
       '</div>'

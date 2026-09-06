@@ -523,22 +523,26 @@ select {
 .pack-progress { font-size: 12px; color: #97a29c; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
 /* The front card is the biggest card display in the app on purpose — this is the actual
    "pull" moment (see .card-frame--stack for its size). Peeking cards behind it stay at a
-   small fixed size since they're still a mystery and only need to hint at their color; the
-   wrap's own size always matches the front card exactly so it never clips or leaves extra
-   dead space. */
+   small fixed size since they're still a mystery and only need to hint at their color. The
+   wrap's width is set inline (app.js) to exactly the front card's width plus however many
+   peeks are actually behind it — never more — so there's never unaccounted-for background
+   area exposed next to the cards. */
 .stack-wrap {
   position: relative; margin: 4px auto 18px;
-  width: calc(min(62vw, 300px) + 40px); height: calc(min(62vw, 300px) * 1.4 + 78px);
+  height: calc(min(62vw, 300px) * 1.4 + 78px);
 }
+/* Peeking cards must be sized exactly the same as the front card (not a smaller fixed
+   size) — otherwise, the instant the front card flies away mid-transition, the smaller
+   peek underneath doesn't fully cover the space it occupied, exposing the stage's dark
+   background as a visible border for that ~300ms. */
 .stack-item {
-  position: absolute; left: 0; top: 0; width: 220px;
+  position: absolute; left: 0; top: 0; width: min(62vw, 300px);
   transition: transform .3s ease, opacity .3s ease;
 }
-.stack-item--front { width: min(62vw, 300px); }
 /* Peeking cards render the bare box (no .card-frame wrapper, no caption — they're still a
    mystery), so they need their own explicit height; the front card gets its height from
    .card-frame--stack .card-face instead. */
-.stack-item > .card-face { height: 293px; }
+.stack-item > .card-face { height: calc(min(62vw, 300px) * 1.4); }
 .stack-hint { font-size: 12px; color: #97a29c; margin: 10px 0 0; }
 
 /* Any $1,000+ card gets a permanent pulsing glow, everywhere its face is shown. */
