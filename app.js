@@ -832,6 +832,121 @@
         "Superfractor Autograph 1/1": "images/qb-taylor-lease-superfractor-auto.jpg",
         "Case Hit": "images/qb-taylor-lease-case-hit.jpg"
       }
+    },
+    "Darius King": {
+      image: "images/qb-darius-king.jpg", selfContained: true,
+      variants: {
+        "Refractor": "images/qb-darius-king-refractor.jpg",
+        "Green Refractor": "images/qb-darius-king-green.jpg",
+        "Blue Refractor": "images/qb-darius-king-blue.jpg",
+        "Orange Refractor": "images/qb-darius-king-orange.jpg",
+        "Gold Refractor": "images/qb-darius-king-gold.jpg",
+        "Red Refractor": "images/qb-darius-king-red.jpg",
+        "Black Refractor": "images/qb-darius-king-black.jpg",
+        "Superfractor 1/1": "images/qb-darius-king-superfractor.jpg",
+        "Base Autograph": "images/qb-darius-king-base-auto.jpg",
+        "Refractor Autograph": "images/qb-darius-king-refractor-auto.jpg",
+        "Green Refractor Autograph": "images/qb-darius-king-green-auto.jpg",
+        "Blue Refractor Autograph": "images/qb-darius-king-blue-auto.jpg",
+        "Orange Refractor Autograph": "images/qb-darius-king-orange-auto.jpg",
+        "Gold Refractor Autograph": "images/qb-darius-king-gold-auto.jpg",
+        "Red Refractor Autograph": "images/qb-darius-king-red-auto.jpg",
+        "Black Refractor Autograph": "images/qb-darius-king-black-auto.jpg",
+        "Superfractor Autograph 1/1": "images/qb-darius-king-superfractor-auto.jpg",
+        "Case Hit": "images/qb-darius-king-case-hit.jpg"
+      }
+    },
+    "DeShawn Booker": {
+      image: "images/qb-deshawn-booker.jpg", selfContained: true,
+      variants: {
+        "Refractor": "images/qb-deshawn-booker-refractor.jpg",
+        "Green Refractor": "images/qb-deshawn-booker-green.jpg",
+        "Blue Refractor": "images/qb-deshawn-booker-blue.jpg",
+        "Orange Refractor": "images/qb-deshawn-booker-orange.jpg",
+        "Gold Refractor": "images/qb-deshawn-booker-gold.jpg",
+        "Red Refractor": "images/qb-deshawn-booker-red.jpg",
+        "Black Refractor": "images/qb-deshawn-booker-black.jpg",
+        "Superfractor 1/1": "images/qb-deshawn-booker-superfractor.jpg",
+        "Base Autograph": "images/qb-deshawn-booker-base-auto.jpg",
+        "Refractor Autograph": "images/qb-deshawn-booker-refractor-auto.jpg",
+        "Green Refractor Autograph": "images/qb-deshawn-booker-green-auto.jpg",
+        "Blue Refractor Autograph": "images/qb-deshawn-booker-blue-auto.jpg",
+        "Orange Refractor Autograph": "images/qb-deshawn-booker-orange-auto.jpg",
+        "Gold Refractor Autograph": "images/qb-deshawn-booker-gold-auto.jpg",
+        "Red Refractor Autograph": "images/qb-deshawn-booker-red-auto.jpg",
+        "Black Refractor Autograph": "images/qb-deshawn-booker-black-auto.jpg",
+        "Superfractor Autograph 1/1": "images/qb-deshawn-booker-superfractor-auto.jpg",
+        "Case Hit": "images/qb-deshawn-booker-case-hit.jpg"
+      }
+    },
+    "Devin Hayes": {
+      image: "images/qb-devin-hayes.jpg", selfContained: true,
+      variants: {
+        "Refractor": "images/qb-devin-hayes-refractor.jpg",
+        "Green Refractor": "images/qb-devin-hayes-green.jpg",
+        "Blue Refractor": "images/qb-devin-hayes-blue.jpg",
+        "Orange Refractor": "images/qb-devin-hayes-orange.jpg",
+        "Gold Refractor": "images/qb-devin-hayes-gold.jpg",
+        "Red Refractor": "images/qb-devin-hayes-red.jpg",
+        "Black Refractor": "images/qb-devin-hayes-black.jpg",
+        "Superfractor 1/1": "images/qb-devin-hayes-superfractor.jpg",
+        "Base Autograph": "images/qb-devin-hayes-base-auto.jpg",
+        "Refractor Autograph": "images/qb-devin-hayes-refractor-auto.jpg",
+        "Green Refractor Autograph": "images/qb-devin-hayes-green-auto.jpg",
+        "Blue Refractor Autograph": "images/qb-devin-hayes-blue-auto.jpg",
+        "Orange Refractor Autograph": "images/qb-devin-hayes-orange-auto.jpg",
+        "Gold Refractor Autograph": "images/qb-devin-hayes-gold-auto.jpg",
+        "Red Refractor Autograph": "images/qb-devin-hayes-red-auto.jpg",
+        "Black Refractor Autograph": "images/qb-devin-hayes-black-auto.jpg",
+        "Superfractor Autograph 1/1": "images/qb-devin-hayes-superfractor-auto.jpg",
+        "Case Hit": "images/qb-devin-hayes-case-hit.jpg"
+      }
+    },
+    "Kai Skywalker": {
+      image: "images/qb-kai-skywalker.jpg", selfContained: true,
+      variants: {
+        "Refractor": "images/qb-kai-skywalker-refractor.jpg",
+        "Green Refractor": "images/qb-kai-skywalker-green.jpg",
+        "Blue Refractor": "images/qb-kai-skywalker-blue.jpg",
+        "Orange Refractor": "images/qb-kai-skywalker-orange.jpg",
+        "Gold Refractor": "images/qb-kai-skywalker-gold.jpg",
+        "Red Refractor": "images/qb-kai-skywalker-red.jpg",
+        "Black Refractor": "images/qb-kai-skywalker-black.jpg",
+        "Superfractor 1/1": "images/qb-kai-skywalker-superfractor.jpg",
+        "Base Autograph": "images/qb-kai-skywalker-base-auto.jpg",
+        "Refractor Autograph": "images/qb-kai-skywalker-refractor-auto.jpg",
+        "Green Refractor Autograph": "images/qb-kai-skywalker-green-auto.jpg",
+        "Blue Refractor Autograph": "images/qb-kai-skywalker-blue-auto.jpg",
+        "Orange Refractor Autograph": "images/qb-kai-skywalker-orange-auto.jpg",
+        "Gold Refractor Autograph": "images/qb-kai-skywalker-gold-auto.jpg",
+        "Red Refractor Autograph": "images/qb-kai-skywalker-red-auto.jpg",
+        "Black Refractor Autograph": "images/qb-kai-skywalker-black-auto.jpg",
+        "Superfractor Autograph 1/1": "images/qb-kai-skywalker-superfractor-auto.jpg",
+        "Case Hit": "images/qb-kai-skywalker-case-hit.jpg"
+      }
+    },
+    "Marcus Reddick": {
+      image: "images/qb-marcus-reddick.jpg", selfContained: true,
+      variants: {
+        "Refractor": "images/qb-marcus-reddick-refractor.jpg",
+        "Green Refractor": "images/qb-marcus-reddick-green.jpg",
+        "Blue Refractor": "images/qb-marcus-reddick-blue.jpg",
+        "Orange Refractor": "images/qb-marcus-reddick-orange.jpg",
+        "Gold Refractor": "images/qb-marcus-reddick-gold.jpg",
+        "Red Refractor": "images/qb-marcus-reddick-red.jpg",
+        "Black Refractor": "images/qb-marcus-reddick-black.jpg",
+        "Superfractor 1/1": "images/qb-marcus-reddick-superfractor.jpg",
+        "Base Autograph": "images/qb-marcus-reddick-base-auto.jpg",
+        "Refractor Autograph": "images/qb-marcus-reddick-refractor-auto.jpg",
+        "Green Refractor Autograph": "images/qb-marcus-reddick-green-auto.jpg",
+        "Blue Refractor Autograph": "images/qb-marcus-reddick-blue-auto.jpg",
+        "Orange Refractor Autograph": "images/qb-marcus-reddick-orange-auto.jpg",
+        "Gold Refractor Autograph": "images/qb-marcus-reddick-gold-auto.jpg",
+        "Red Refractor Autograph": "images/qb-marcus-reddick-red-auto.jpg",
+        "Black Refractor Autograph": "images/qb-marcus-reddick-black-auto.jpg",
+        "Superfractor Autograph 1/1": "images/qb-marcus-reddick-superfractor-auto.jpg",
+        "Case Hit": "images/qb-marcus-reddick-case-hit.jpg"
+      }
     }
   };
   // Whether this card should use the photo template at all (vs. the generic silhouette).

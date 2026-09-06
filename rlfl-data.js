@@ -3,7 +3,7 @@
 var RLFL_TEAMS = [
   "San Diego Lightning",
   "New York Monsters",
-  "Golden Delta Ironclads",
+  "LA GOATS",
   "Starlight Bluff Sentinels",
   "Ironwood Bandits",
   "Stormwatch Renegades",
@@ -16,7 +16,7 @@ var RLFL_TEAMS = [
 var RLFL_ROSTER = {
   "San Diego Lightning": [{name:"Justin Hayes",pos:"QB",rookie:true}, {name:"Omar Nichols",pos:"RB",rookie:false}, {name:"Jalen Cross",pos:"WR",rookie:false}, {name:"Theo Mercer",pos:"TE",rookie:false}, {name:"Malcolm Price",pos:"DEF",rookie:false}],
   "New York Monsters": [{name:"Jett Jones",pos:"QB",rookie:false}, {name:"Cal Braddock",pos:"RB",rookie:false}, {name:"Malachi Naylor",pos:"WR",rookie:false}, {name:"Roman Ranson",pos:"TE",rookie:false}, {name:"Taylor Lease",pos:"DEF",rookie:false}],
-  "Golden Delta Ironclads": [{name:"Nolan Donovan",pos:"QB",rookie:false}, {name:"Stone Stanton",pos:"RB",rookie:false}, {name:"Cass Castellan",pos:"WR",rookie:false}, {name:"Marcus Dietrich",pos:"TE",rookie:false}, {name:"Darnell Zimmerman",pos:"DEF",rookie:true}],
+  "LA GOATS": [{name:"Darius King",pos:"QB",rookie:false}, {name:"DeShawn Booker",pos:"RB",rookie:true}, {name:"Devin Hayes",pos:"WR",rookie:false}, {name:"Kai Skywalker",pos:"TE",rookie:false}, {name:"Marcus Reddick",pos:"DEF",rookie:false}],
   "Starlight Bluff Sentinels": [{name:"Colt Wexford",pos:"QB",rookie:false}, {name:"Stone Yarborough",pos:"RB",rookie:false}, {name:"Trey Quintana",pos:"WR",rookie:true}, {name:"Dutch Torrance",pos:"TE",rookie:false}, {name:"Deshawn Drummond",pos:"DEF",rookie:false}],
   "Ironwood Bandits": [{name:"Tyree Harkness",pos:"QB",rookie:false}, {name:"Marquis Ironside",pos:"RB",rookie:false}, {name:"Devon Bishara",pos:"WR",rookie:false}, {name:"Tyree Eastwood",pos:"TE",rookie:true}, {name:"Dutch Bramwell",pos:"DEF",rookie:false}],
   "Stormwatch Renegades": [{name:"Titus Brannigan",pos:"QB",rookie:false}, {name:"Percy Harkness",pos:"RB",rookie:true}, {name:"Kellen Ostrander",pos:"WR",rookie:false}, {name:"Lamar Nakamura",pos:"TE",rookie:false}, {name:"Otis Wexford",pos:"DEF",rookie:false}],
