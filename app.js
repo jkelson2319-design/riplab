@@ -1301,7 +1301,11 @@
 
     var historyHTML = "";
     if (revealedCards.length > 0) {
-      var seen = revealedCards.slice().reverse();
+      // Mid-rip: most recently pulled first. Once the whole break is done, re-sort by
+      // value so the biggest hits lead the recap instead of just whatever came out last.
+      var seen = done
+        ? revealedCards.slice().sort(function (a, b) { return b.value - a.value; })
+        : revealedCards.slice().reverse();
       historyHTML =
         '<div class="history-label">Pulled so far (' + revealed + ' / ' + total + ')</div>' +
         '<div class="history-strip">' +
