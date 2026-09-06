@@ -42,6 +42,8 @@
     autograph: 3,
     caseHit: 15
   };
+  // Floor on any Case Hit (Cathedral) card's value — see makeHitCard.
+  var CASE_HIT_MIN_VALUE = 500;
   // Plain refractor/color tag name -> its CARD_MULT key. Case Hit is deliberately
   // excluded: it's a separate chase family, not a rung on this color ladder.
   var COLOR_TAG_MULT_KEY = {
@@ -304,6 +306,10 @@
     var hi = Math.max(lo, Math.round(HIT_CARD_VALUE[1] * baseScale));
     var playerBaseValue = rand(lo, hi);
     var value = Math.round(playerBaseValue * cardValueMultiplier(tag, isAutograph));
+    // Cathedral (the Case Hit design) is a marquee chase card regardless of which player
+    // or format it comes out of — guarantee it's worth something even when the roll's
+    // usual player-value x multiplier math would land well under that.
+    if (tag === "Case Hit") value = Math.max(value, CASE_HIT_MIN_VALUE);
     return {
       id: uid(), team: team, player: player.name, pos: player.pos,
       isRookie: !!player.rookie, tag: tag, value: value, isMega: value >= format.megaThreshold
