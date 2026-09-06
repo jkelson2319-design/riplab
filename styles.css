@@ -382,7 +382,7 @@ select {
 .pack-intro-sub { font-size: 13px; margin: 0 0 18px; }
 .pack3d-wrap { perspective: 1100px; margin-bottom: 4px; }
 .pack3d {
-  position: relative; width: 150px; height: 210px; margin: 0 auto;
+  position: relative; width: 174px; height: 290px; margin: 0 auto;
   transform-style: preserve-3d; cursor: pointer;
   transform: rotateY(-24deg) rotateX(8deg);
   animation: packFloat 3.4s ease-in-out infinite;
@@ -416,16 +416,18 @@ select {
 }
 .pack3d__half--top { top: 0; }
 .pack3d__half--bottom { bottom: 0; }
+/* Real pack art (images/pack-rlfl-chrome.png) — .pack3d__inner is sized to the FULL pack
+   (100% width, 290px height, matching .pack3d itself) and absolutely positioned so each
+   half only reveals its own 50% slice of the same full image, clipped by its parent
+   .pack3d__half's overflow:hidden — the classic sprite-half trick for tearing a single
+   image into two independently-animatable pieces. */
 .pack3d__inner {
-  position: absolute; left: 0; width: 100%; height: 210px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-  background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 55%, var(--accent) 100%);
-  color: #141615;
+  position: absolute; left: 0; width: 100%; height: 290px;
+  background-image: url('images/pack-rlfl-chrome.png');
+  background-size: cover; background-position: center;
 }
 .pack3d__half--top .pack3d__inner { top: 0; }
 .pack3d__half--bottom .pack3d__inner { bottom: 0; }
-.pack3d__brand { font-family: 'Bebas Neue', sans-serif; font-size: 30px; letter-spacing: .04em; }
-.pack3d__sub { font-size: 10px; font-weight: 700; letter-spacing: .1em; }
 .pack3d__seam { position: absolute; left: 5%; right: 5%; top: 50%; height: 2px; background: rgba(0,0,0,.35); transform: translateY(-1px); z-index: 1; }
 .pack3d__shine {
   position: absolute; inset: 0; border-radius: 14px; pointer-events: none;
@@ -480,35 +482,46 @@ select {
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
   gap: 10px; margin-bottom: 16px;
 }
+.pack-grid-head__title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .pack-grid-head h3 { margin: 0; font-size: 22px; }
-.pack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; }
+.pack-remaining { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+/* One fan per box: packs overlap like a dealt hand of cards (negative margin) instead of
+   sitting in separate grid cells. Each row never needs to wrap — a box only ever has a
+   handful of packs — so multiple boxes (a case purchase) just stack as separate fan groups.
+   No per-pack label/status text anymore — the header's pack-remaining count covers it. */
+.pack-grid { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.pack-fan-group { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.pack-fan-group__label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+.pack-fan-row { display: flex; align-items: flex-end; justify-content: center; }
 .pack-tile {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
-  padding: 14px 8px; cursor: pointer; font: inherit; color: var(--text);
-  transition: transform .12s ease, border-color .12s ease;
+  display: flex; background: transparent; border: none; border-radius: 10px;
+  padding: 6px 14px; margin-left: -22px; cursor: pointer; font: inherit; color: var(--text);
+  position: relative;
 }
-.pack-tile:not(:disabled):hover { transform: translateY(-2px); border-color: var(--accent); }
+.pack-fan-row > .pack-tile:first-child { margin-left: 0; }
+.pack-tile:not(:disabled):hover { z-index: 50 !important; }
 .pack-tile:disabled { opacity: .6; cursor: default; }
-.pack-tile__label { font-size: 12px; font-weight: 700; text-align: center; }
-.pack-tile__status { font-size: 10.5px; color: var(--text-muted); }
-.pack-tile.opened .pack-tile__status { color: var(--accent-2); }
 
-/* Mini pack — same brand look as the big 3D pack, scattered at a slight fixed tilt so the
-   grid reads as packs fanned across a table rather than a perfect row of squares. */
+/* Mini pack — real pack art (images/pack-rlfl-chrome.png), same asset as the big 3D pack.
+   --tilt/--lift (set per-position in app.js) fan each one out at a slightly different
+   angle and height, like a dealt hand. */
 .pack-mini {
-  position: relative; width: 56px; height: 78px; border-radius: 7px; overflow: hidden;
-  background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 55%, var(--accent) 100%);
+  position: relative; width: 54px; height: 90px; border-radius: 6px; overflow: hidden;
+  background-image: url('images/pack-rlfl-chrome.png');
+  background-size: cover; background-position: center;
   box-shadow: 0 6px 12px rgba(0,0,0,.35);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  color: #141615; transform: rotate(var(--tilt, 0deg)); transition: transform .15s ease;
+  display: flex; align-items: center; justify-content: center;
+  transform: translateY(var(--lift, 0px)) rotate(var(--tilt, 0deg));
+  transition: transform .15s ease, box-shadow .15s ease;
 }
-.pack-tile:not(:disabled):hover .pack-mini { transform: rotate(0deg) scale(1.06); }
-.pack-mini__seam { position: absolute; left: 8%; right: 8%; top: 50%; height: 1.5px; background: rgba(0,0,0,.3); }
-.pack-mini__brand { font-family: 'Bebas Neue', sans-serif; font-size: 15px; letter-spacing: .03em; line-height: 1; }
-.pack-mini__sub { font-size: 5.5px; font-weight: 700; letter-spacing: .08em; }
-.pack-tile.opened .pack-mini { filter: grayscale(1) brightness(.7); transform: rotate(0deg); box-shadow: none; }
-.pack-tile.opened .pack-mini .pack-mini__brand { font-size: 20px; }
+.pack-tile:not(:disabled):hover .pack-mini {
+  transform: translateY(calc(var(--lift, 0px) - 10px)) rotate(0deg) scale(1.08);
+  box-shadow: 0 12px 20px rgba(0,0,0,.45);
+}
+.pack-mini__done {
+  font-size: 22px; font-weight: 800; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.6);
+}
+.pack-tile.opened .pack-mini { filter: grayscale(1) brightness(.55); transform: translateY(var(--lift, 0px)) rotate(0deg); box-shadow: none; }
 
 /* Card stack — the front card (leftmost, on top) is fully visible; the rest of the pack
    peeks out behind/to its right just enough to hint at color (refractor sheen, gold

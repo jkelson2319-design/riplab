@@ -1058,34 +1058,53 @@
     '</div>';
   }
 
-  // Small deterministic tilt per index so the grid reads as packs scattered/fanned across
-  // a table rather than a perfect grid — same angle every render, no jitter on re-render.
-  var PACK_TILT_STEPS = [-7, -3, 0, 3, 7];
+  // Deterministic tilt + lift per position within a box's fan, so the packs read as a
+  // dealt hand fanned out across a table — same angles every render, no jitter on re-render.
+  // Grouped per box (not one continuous row) so overlap never has to wrap awkwardly even
+  // for a full case purchase with many boxes.
+  var PACK_FAN = [
+    { tilt: -12, lift: 8 },
+    { tilt: -6, lift: 2 },
+    { tilt: 0, lift: 0 },
+    { tilt: 6, lift: 2 },
+    { tilt: 12, lift: 8 }
+  ];
   function packGridHTML(ab, format) {
-    var tiles = ab.packs.map(function (p, i) {
-      var done = p.revealedCount >= p.cards.length;
-      var multiBox = ab.packs.length > format.packsPerBox;
-      var label = multiBox
-        ? "Box " + (Math.floor(i / format.packsPerBox) + 1) + " · Pack " + ((i % format.packsPerBox) + 1)
-        : "Pack " + (i + 1);
-      var tilt = PACK_TILT_STEPS[i % PACK_TILT_STEPS.length];
-      return (
-        '<button class="pack-tile' + (done ? ' opened' : '') + '" data-pack="' + i + '"' + (done ? ' disabled' : '') + '>' +
-          '<div class="pack-mini" style="--tilt:' + tilt + 'deg">' +
-            '<div class="pack-mini__seam"></div>' +
-            (done
-              ? '<span class="pack-mini__brand">✓</span>'
-              : '<span class="pack-mini__brand">RLFL</span><span class="pack-mini__sub">CHROME</span>') +
-          '</div>' +
-          '<span class="pack-tile__label">' + label + '</span>' +
-          '<span class="pack-tile__status">' + (done ? "Opened" : p.cards.length + " cards") + '</span>' +
-        '</button>'
+    var multiBox = ab.packs.length > format.packsPerBox;
+    var boxCount = Math.ceil(ab.packs.length / format.packsPerBox);
+    var remaining = ab.packs.filter(function (p) { return p.revealedCount < p.cards.length; }).length;
+    var rows = [];
+    for (var b = 0; b < boxCount; b++) {
+      var boxPacks = ab.packs.slice(b * format.packsPerBox, (b + 1) * format.packsPerBox);
+      var tiles = boxPacks.map(function (p, iInBox) {
+        var i = b * format.packsPerBox + iInBox;
+        var done = p.revealedCount >= p.cards.length;
+        var fan = PACK_FAN[iInBox % PACK_FAN.length];
+        return (
+          '<button class="pack-tile' + (done ? ' opened' : '') + '" data-pack="' + i + '" style="z-index:' + (iInBox + 1) + '"' + (done ? ' disabled' : '') + '>' +
+            '<div class="pack-mini" style="--tilt:' + fan.tilt + 'deg; --lift:' + fan.lift + 'px">' +
+              (done ? '<span class="pack-mini__done">✓</span>' : '') +
+            '</div>' +
+          '</button>'
+        );
+      }).join("");
+      rows.push(
+        '<div class="pack-fan-group">' +
+          (multiBox ? '<div class="pack-fan-group__label">Box ' + (b + 1) + '</div>' : '') +
+          '<div class="pack-fan-row">' + tiles + '</div>' +
+        '</div>'
       );
-    }).join("");
+    }
     return (
       '<div class="pack-grid-wrap">' +
-        '<div class="pack-grid-head"><h3>Choose a Pack</h3><button class="btn" id="instantRipBoxBtn">Instant Rip Everything Left</button></div>' +
-        '<div class="pack-grid">' + tiles + '</div>' +
+        '<div class="pack-grid-head">' +
+          '<div class="pack-grid-head__title">' +
+            '<h3>Choose a Pack</h3>' +
+            '<span class="pack-remaining">' + remaining + ' pack' + (remaining === 1 ? "" : "s") + ' remaining</span>' +
+          '</div>' +
+          '<button class="btn" id="instantRipBoxBtn">Instant Rip Everything Left</button>' +
+        '</div>' +
+        '<div class="pack-grid">' + rows.join("") + '</div>' +
       '</div>'
     );
   }
@@ -1097,8 +1116,8 @@
         '<div class="pack3d-wrap">' +
           '<div class="pack3d" id="pack3d">' +
             '<div class="pack3d__face pack3d__face--front">' +
-              '<div class="pack3d__half pack3d__half--top"><div class="pack3d__inner"><span class="pack3d__brand">RLFL</span><span class="pack3d__sub">DEBUT CHROME</span></div></div>' +
-              '<div class="pack3d__half pack3d__half--bottom"><div class="pack3d__inner"><span class="pack3d__brand">RLFL</span><span class="pack3d__sub">DEBUT CHROME</span></div></div>' +
+              '<div class="pack3d__half pack3d__half--top"><div class="pack3d__inner"></div></div>' +
+              '<div class="pack3d__half pack3d__half--bottom"><div class="pack3d__inner"></div></div>' +
               '<div class="pack3d__seam"></div>' +
               '<div class="pack3d__shine"></div>' +
             '</div>' +
