@@ -1103,8 +1103,6 @@
               '<div class="pack3d__shine"></div>' +
             '</div>' +
             '<div class="pack3d__face pack3d__face--back"><span class="pack3d__backmark">RLFL</span></div>' +
-            '<div class="pack3d__face pack3d__face--left"></div>' +
-            '<div class="pack3d__face pack3d__face--right"></div>' +
           '</div>' +
         '</div>' +
         '<h3 class="pack-intro-title">Pack ' + (ab.currentPackIndex + 1) + '</h3>' +
