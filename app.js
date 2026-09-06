@@ -1179,12 +1179,16 @@
     var kept = pack.cards.filter(function (c) { return wholeBox || c.team === ab.yourTeam; });
     var keptValue = kept.reduce(function (s, c) { return s + c.value; }, 0);
     var recapLine = wholeBox ? "Every card is yours." : kept.length + " of " + pack.cards.length + " matched " + ab.yourTeam + ".";
+    var hasNext = findNextUnopenedPackIndex(ab, ab.currentPackIndex) !== -1;
     return (
       '<div class="stage" id="stageEl">' +
         '<div class="stage-flash"></div>' +
         '<h3 class="pack-intro-title">Pack ' + (ab.currentPackIndex + 1) + ' Complete</h3>' +
         '<p class="pack-intro-sub">' + recapLine + ' Value <strong>' + money(keptValue) + '</strong></p>' +
-        '<button class="btn btn-primary" id="backToPacksBtn">Back to Packs</button>' +
+        (hasNext
+          ? '<p class="pack-intro-sub">Next pack coming up…</p><button class="btn" id="backToPacksBtn">Choose a Different Pack</button>'
+          : '<button class="btn btn-primary" id="backToPacksBtn">Back to Packs</button>'
+        ) +
       '</div>'
     );
   }
@@ -1210,12 +1214,70 @@
     if (stageEl) { spawnConfetti(stageEl, 42, "#ffd54a", true); triggerFlash(stageEl, true); }
   }
 
+  // Auto-rip: once a pack is fully revealed, moving on to the next pack is always
+  // automatic (no more "Back to Packs" busywork) — the button still works if someone
+  // wants to jump ahead sooner. Auto-advancing through the CARDS inside a pack, and
+  // auto-tearing each new pack, is gated behind the "Auto-Rip" toggle since flipping each
+  // card yourself is usually the fun part; this is only for someone who wants to sit back
+  // and watch the whole box/case go by.
+  var autoRip = false;
+  var autoRipSpeed = 1; // multiplier applied to every auto-rip delay below; higher = faster
+  var AUTO_RIP_SPEEDS = [
+    { value: 0.6, label: "Slow" },
+    { value: 1, label: "Normal" },
+    { value: 2, label: "Fast" },
+    { value: 3.5, label: "Fastest" }
+  ];
+  var autoRipTimer = null;
+  function clearAutoRipTimer() {
+    if (autoRipTimer) { clearTimeout(autoRipTimer); autoRipTimer = null; }
+  }
+  function findNextUnopenedPackIndex(ab, afterIndex) {
+    var i;
+    for (i = afterIndex + 1; i < ab.packs.length; i++) {
+      if (ab.packs[i].revealedCount < ab.packs[i].cards.length) return i;
+    }
+    for (i = 0; i <= afterIndex; i++) {
+      if (ab.packs[i].revealedCount < ab.packs[i].cards.length) return i;
+    }
+    return -1;
+  }
+  function scheduleAutoRip(ab) {
+    clearAutoRipTimer();
+    if (!ab || ab.currentPackIndex === null) return;
+    var total = ab.packs.reduce(function (s, p) { return s + p.cards.length; }, 0);
+    var revealed = ab.packs.reduce(function (s, p) { return s + p.revealedCount; }, 0);
+    if (revealed >= total) return;
+    var pack = ab.packs[ab.currentPackIndex];
+    if (pack.revealedCount >= pack.cards.length) {
+      var nextIdx = findNextUnopenedPackIndex(ab, ab.currentPackIndex);
+      if (nextIdx !== -1) {
+        autoRipTimer = setTimeout(function () {
+          var abNow = state.activeBreak;
+          if (!abNow) return;
+          abNow.currentPackIndex = nextIdx;
+          renderAll();
+        }, REDUCE_MOTION ? 20 : 1400 / autoRipSpeed);
+      }
+      return;
+    }
+    if (!autoRip) return;
+    if (!pack.torn) {
+      autoRipTimer = setTimeout(startTear, REDUCE_MOTION ? 20 : 900 / autoRipSpeed);
+      return;
+    }
+    var front = pack.cards[pack.revealedCount];
+    var baseDelay = front && front.isMega ? 2400 : 1300;
+    autoRipTimer = setTimeout(advanceStack, REDUCE_MOTION ? 20 : baseDelay / autoRipSpeed);
+  }
+
   function renderLive() {
     var content = document.getElementById("liveContent");
     var sub = document.getElementById("liveSub");
     var ab = state.activeBreak;
 
     if (!ab) {
+      clearAutoRipTimer();
       sub.textContent = "Head to the Shop to buy into a break.";
       content.innerHTML =
         '<div class="empty-state"><h3>No break running</h3><p>Buy a spot in the Shop tab to start ripping.</p></div>';
@@ -1275,12 +1337,31 @@
     }
 
     content.innerHTML =
-      '<div class="live-header"><span class="your-team-badge">' + (wholeBox ? "📦 Personal " + (ab.mode === "case" ? "Case" : "Box") + " — every card is yours" : "🎯 " + ab.yourTeam) + '</span></div>' +
+      '<div class="live-header">' +
+        '<span class="your-team-badge">' + (wholeBox ? "📦 Personal " + (ab.mode === "case" ? "Case" : "Box") + " — every card is yours" : "🎯 " + ab.yourTeam) + '</span>' +
+        (done ? "" :
+          '<div class="auto-rip-controls">' +
+            '<label class="auto-rip-toggle">' +
+              '<input type="checkbox" id="autoRipToggle"' + (autoRip ? " checked" : "") + '>' +
+              ' Auto-Rip' +
+            '</label>' +
+            (autoRip
+              ? '<select id="autoRipSpeed" class="auto-rip-speed">' +
+                  AUTO_RIP_SPEEDS.map(function (s) {
+                    return '<option value="' + s.value + '"' + (s.value === autoRipSpeed ? " selected" : "") + '>' + s.label + '</option>';
+                  }).join("") +
+                '</select>'
+              : ""
+            ) +
+          '</div>'
+        ) +
+      '</div>' +
       '<div class="progress-track"><div class="progress-fill" style="width:' + Math.round((revealed / total) * 100) + '%"></div></div>' +
       mainHTML +
       historyHTML;
 
     if (document.getElementById("stackWrap")) maybeBurstFrontCard(ab);
+    scheduleAutoRip(ab);
   }
 
   var COLLECTION_POSITIONS = ["QB", "RB", "WR", "TE", "DEF"];
@@ -1608,12 +1689,17 @@
   }
 
   // Takes the front card off the stack: animates it flying up and away, then collects it
-  // and reveals whatever was peeking behind it as the new front card.
+  // and reveals whatever was peeking behind it as the new front card. Guarded against
+  // double-invocation (e.g. a manual click landing at the same moment as an auto-advance
+  // timer) so the same card never gets pushed into the collection twice.
+  var advancingStack = false;
   function advanceStack() {
+    if (advancingStack) return;
     var ab = state.activeBreak;
     if (!ab || ab.currentPackIndex === null) return;
     var pack = ab.packs[ab.currentPackIndex];
     if (!pack || !pack.torn || pack.revealedCount >= pack.cards.length) return;
+    advancingStack = true;
     var card = pack.cards[pack.revealedCount];
     var isMine = ab.yourTeam === null || card.team === ab.yourTeam;
     var frontEl = document.querySelector(".stack-item--front");
@@ -1626,9 +1712,50 @@
     later(function () {
       if (isMine) state.collection.push(card);
       pack.revealedCount += 1;
+      advancingStack = false;
       renderAll();
     }, REDUCE_MOTION ? 20 : 300);
   }
+
+  // Starts the pack-tear sequence (spin, then tear). Shared by the manual "Tear Open"
+  // click and the auto-rip scheduler below. Guarded against double-invocation the same
+  // way advanceStack is — checking the pack3d element's own animation class covers both
+  // a duplicate manual click and an auto-timer landing mid-animation.
+  function startTear() {
+    var ab = state.activeBreak;
+    if (!ab || ab.currentPackIndex === null) return;
+    var pack = ab.packs[ab.currentPackIndex];
+    if (!pack || pack.torn) return;
+    var pack3d = document.getElementById("pack3d");
+    if (pack3d && (pack3d.classList.contains("spinning") || pack3d.classList.contains("tearing"))) return;
+    var tearBtn = document.getElementById("tearPackBtn");
+    if (tearBtn) tearBtn.disabled = true;
+    var introStage = document.getElementById("stageEl");
+    // Wind-up: a few full 3D spins before the tear, so the pack reads as a real object
+    // (front/back/edges all visible in turn) rather than just flipping open flat.
+    if (pack3d) pack3d.classList.add("spinning");
+    later(function () {
+      if (pack3d) { pack3d.classList.remove("spinning"); pack3d.classList.add("tearing"); }
+      triggerFlash(introStage, true);
+      spawnConfetti(introStage, 18, "var(--accent)");
+      later(function () {
+        var abNow = state.activeBreak;
+        if (!abNow) return;
+        abNow.packs[abNow.currentPackIndex].torn = true;
+        renderAll();
+      }, 620);
+    }, 1150);
+  }
+
+  document.getElementById("liveContent").addEventListener("change", function (e) {
+    if (e.target.id === "autoRipToggle") {
+      autoRip = e.target.checked;
+      renderAll();
+    } else if (e.target.id === "autoRipSpeed") {
+      autoRipSpeed = parseFloat(e.target.value) || 1;
+      renderAll();
+    }
+  });
 
   document.getElementById("liveContent").addEventListener("click", function (e) {
     var packBtn = e.target.closest("[data-pack]");
@@ -1641,27 +1768,7 @@
       }
       return;
     }
-    var tearBtn = e.target.closest("#tearPackBtn");
-    if (tearBtn) {
-      tearBtn.disabled = true;
-      var pack3d = document.getElementById("pack3d");
-      var introStage = document.getElementById("stageEl");
-      // Wind-up: a few full 3D spins before the tear, so the pack reads as a real object
-      // (front/back/edges all visible in turn) rather than just flipping open flat.
-      if (pack3d) pack3d.classList.add("spinning");
-      later(function () {
-        if (pack3d) { pack3d.classList.remove("spinning"); pack3d.classList.add("tearing"); }
-        triggerFlash(introStage, true);
-        spawnConfetti(introStage, 18, "var(--accent)");
-        later(function () {
-          var abNow = state.activeBreak;
-          if (!abNow) return;
-          abNow.packs[abNow.currentPackIndex].torn = true;
-          renderAll();
-        }, 620);
-      }, 1150);
-      return;
-    }
+    if (e.target.closest("#tearPackBtn")) { startTear(); return; }
     if (e.target.closest("#nextCardBtn")) { advanceStack(); return; }
     if (e.target.closest("#instantRipBoxBtn")) { instantRipBox(); return; }
     if (e.target.closest("#backToPacksBtn")) {
