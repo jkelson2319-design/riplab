@@ -1102,7 +1102,6 @@
             '<h3>Choose a Pack</h3>' +
             '<span class="pack-remaining">' + remaining + ' pack' + (remaining === 1 ? "" : "s") + ' remaining</span>' +
           '</div>' +
-          '<button class="btn" id="instantRipBoxBtn">Instant Rip Everything Left</button>' +
         '</div>' +
         '<div class="pack-grid">' + rows.join("") + '</div>' +
       '</div>'
@@ -1357,6 +1356,7 @@
                 '</select>'
               : ""
             ) +
+            '<button class="btn" id="instantRipBoxBtn">Instant Rip Everything Left</button>' +
           '</div>'
         ) +
       '</div>' +
