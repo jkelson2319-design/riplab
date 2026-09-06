@@ -1127,9 +1127,9 @@
 
   // A stacked deck: the current card sits fully visible at front (center), the rest of the
   // pack peeks out behind/to the right just enough to hint at its color (so a refractor
-  // sheen or autograph gold is visible before you get to it). Swiping the front card up
-  // (or tapping the button) takes it and reveals the next one. Only the front card gets a
-  // caption (parallel + price) — peeking cards stay a mystery until they're revealed.
+  // sheen or autograph gold is visible before you get to it). Tapping the button takes it
+  // and reveals the next one. Only the front card gets a caption (parallel + price) —
+  // peeking cards stay a mystery until they're revealed.
   function packStackHTML(ab, pack) {
     var wholeBox = ab.yourTeam === null;
     var remaining = pack.cards.slice(pack.revealedCount);
@@ -1153,7 +1153,7 @@
         '<div class="pack-progress">Pack ' + (ab.currentPackIndex + 1) + ' · card ' + (pack.revealedCount + 1) + ' of ' + pack.cards.length + '</div>' +
         '<div class="stack-wrap" id="stackWrap">' + items + '</div>' +
         '<button class="btn btn-primary" id="nextCardBtn">Next Card ↑</button>' +
-        '<p class="stack-hint">Swipe up on the top card, or tap the button.</p>' +
+        '<p class="stack-hint">Tap the button to see the next card.</p>' +
       '</div>'
     );
   }
@@ -1660,38 +1660,6 @@
       return;
     }
   });
-
-  // Swipe the front card of the stack up to take it, same action as the button.
-  (function attachStackSwipe(container) {
-    var drag = null;
-    container.addEventListener("pointerdown", function (e) {
-      var front = e.target.closest(".stack-item--front");
-      if (!front) return;
-      drag = { el: front, startX: e.clientX, startY: e.clientY, base: front.dataset.baseTransform || "" };
-      if (front.setPointerCapture) { try { front.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } }
-    });
-    container.addEventListener("pointermove", function (e) {
-      if (!drag) return;
-      var dx = (e.clientX - drag.startX) * 0.25;
-      var dy = Math.min(0, e.clientY - drag.startY);
-      drag.el.style.transition = "none";
-      drag.el.style.transform = drag.base + " translate(" + dx + "px," + dy + "px)";
-    });
-    function endDrag(e) {
-      if (!drag) return;
-      var dy = e.clientY - drag.startY;
-      var el = drag.el, base = drag.base;
-      drag = null;
-      if (dy < -55) {
-        advanceStack();
-      } else {
-        el.style.transition = "transform .2s ease-out";
-        el.style.transform = base;
-      }
-    }
-    container.addEventListener("pointerup", endDrag);
-    container.addEventListener("pointercancel", endDrag);
-  })(document.getElementById("liveContent"));
 
   // Holographic tilt + glare: the card leans toward the pointer and a light sweep tracks
   // it, like tilting a real refractor under a lamp. Works for touch too since pointer
