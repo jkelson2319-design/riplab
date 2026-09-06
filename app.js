@@ -1096,10 +1096,15 @@
         '<div class="stage-flash"></div>' +
         '<div class="pack3d-wrap">' +
           '<div class="pack3d" id="pack3d">' +
-            '<div class="pack3d__half pack3d__half--top"><div class="pack3d__inner"><span class="pack3d__brand">RLFL</span><span class="pack3d__sub">DEBUT CHROME</span></div></div>' +
-            '<div class="pack3d__half pack3d__half--bottom"><div class="pack3d__inner"><span class="pack3d__brand">RLFL</span><span class="pack3d__sub">DEBUT CHROME</span></div></div>' +
-            '<div class="pack3d__seam"></div>' +
-            '<div class="pack3d__shine"></div>' +
+            '<div class="pack3d__face pack3d__face--front">' +
+              '<div class="pack3d__half pack3d__half--top"><div class="pack3d__inner"><span class="pack3d__brand">RLFL</span><span class="pack3d__sub">DEBUT CHROME</span></div></div>' +
+              '<div class="pack3d__half pack3d__half--bottom"><div class="pack3d__inner"><span class="pack3d__brand">RLFL</span><span class="pack3d__sub">DEBUT CHROME</span></div></div>' +
+              '<div class="pack3d__seam"></div>' +
+              '<div class="pack3d__shine"></div>' +
+            '</div>' +
+            '<div class="pack3d__face pack3d__face--back"><span class="pack3d__backmark">RLFL</span></div>' +
+            '<div class="pack3d__face pack3d__face--left"></div>' +
+            '<div class="pack3d__face pack3d__face--right"></div>' +
           '</div>' +
         '</div>' +
         '<h3 class="pack-intro-title">Pack ' + (ab.currentPackIndex + 1) + '</h3>' +
@@ -1112,10 +1117,15 @@
   // The pull reveal is meant to be the biggest moment in the app, so the front card is
   // sized well above every other card display; peeks behind it use a much smaller offset
   // than the card's own size so a full pack (up to 6 cards) never overflows a phone screen.
-  var STACK_FRONT_WIDTH = 220;
-  var STACK_PEEK_OFFSET = 16;
+  // The front card fills most of the screen (sized in CSS via min(84vw, 400px), see
+  // .card-frame--stack) since this is the actual "pull" moment. STACK_PEEK_BUFFER is extra
+  // room reserved in the wrap, beyond the front card's own width, purely so the rest of the
+  // pack can peek out from behind it at a small fixed offset; the front card itself stays
+  // horizontally centered in that wrap by shifting every item right by half the buffer.
+  var STACK_PEEK_OFFSET = 10;
+  var STACK_PEEK_BUFFER = 40;
 
-  // A stacked deck: the current card sits fully visible at front (left), the rest of the
+  // A stacked deck: the current card sits fully visible at front (center), the rest of the
   // pack peeks out behind/to the right just enough to hint at its color (so a refractor
   // sheen or autograph gold is visible before you get to it). Swiping the front card up
   // (or tapping the button) takes it and reveals the next one. Only the front card gets a
@@ -1123,10 +1133,10 @@
   function packStackHTML(ab, pack) {
     var wholeBox = ab.yourTeam === null;
     var remaining = pack.cards.slice(pack.revealedCount);
-    var wrapWidth = STACK_FRONT_WIDTH + Math.max(0, remaining.length - 1) * STACK_PEEK_OFFSET;
+    var centerShift = STACK_PEEK_BUFFER / 2;
     var items = remaining.map(function (card, k) {
       var isMine = wholeBox || card.team === ab.yourTeam;
-      var tx = k * STACK_PEEK_OFFSET;
+      var tx = centerShift + k * STACK_PEEK_OFFSET;
       var rot = (k * 2).toFixed(1);
       var z = remaining.length - k;
       var base = "translate(" + tx + "px, 0) rotate(" + rot + "deg)";
@@ -1141,7 +1151,7 @@
       '<div class="stage stack-stage" id="stageEl">' +
         '<div class="stage-flash"></div>' +
         '<div class="pack-progress">Pack ' + (ab.currentPackIndex + 1) + ' · card ' + (pack.revealedCount + 1) + ' of ' + pack.cards.length + '</div>' +
-        '<div class="stack-wrap" id="stackWrap" style="width:' + wrapWidth + 'px;">' + items + '</div>' +
+        '<div class="stack-wrap" id="stackWrap">' + items + '</div>' +
         '<button class="btn btn-primary" id="nextCardBtn">Next Card ↑</button>' +
         '<p class="stack-hint">Swipe up on the top card, or tap the button.</p>' +
       '</div>'
@@ -1620,15 +1630,20 @@
       tearBtn.disabled = true;
       var pack3d = document.getElementById("pack3d");
       var introStage = document.getElementById("stageEl");
-      if (pack3d) pack3d.classList.add("tearing");
-      triggerFlash(introStage, true);
-      spawnConfetti(introStage, 18, "var(--accent)");
+      // Wind-up: a few full 3D spins before the tear, so the pack reads as a real object
+      // (front/back/edges all visible in turn) rather than just flipping open flat.
+      if (pack3d) pack3d.classList.add("spinning");
       later(function () {
-        var abNow = state.activeBreak;
-        if (!abNow) return;
-        abNow.packs[abNow.currentPackIndex].torn = true;
-        renderAll();
-      }, 620);
+        if (pack3d) { pack3d.classList.remove("spinning"); pack3d.classList.add("tearing"); }
+        triggerFlash(introStage, true);
+        spawnConfetti(introStage, 18, "var(--accent)");
+        later(function () {
+          var abNow = state.activeBreak;
+          if (!abNow) return;
+          abNow.packs[abNow.currentPackIndex].torn = true;
+          renderAll();
+        }, 620);
+      }, 1150);
       return;
     }
     if (e.target.closest("#nextCardBtn")) { advanceStack(); return; }

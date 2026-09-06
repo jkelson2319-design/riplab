@@ -237,6 +237,7 @@ select {
   position: relative; overflow: hidden;
   display: flex; flex-direction: column; justify-content: space-between;
   padding: 12px; height: 100%;
+  background: var(--surface);
   transform: perspective(700px) rotateX(var(--tiltX)) rotateY(var(--tiltY));
   transition: transform .2s ease-out, box-shadow .2s ease-out;
   transform-style: preserve-3d;
@@ -345,11 +346,13 @@ select {
 .card-frame--grid .card-caption__value { font-size: 12px; }
 
 /* The pull reveal — the biggest card display in the app on purpose, so the info below it
-   (parallel + price) is sized to match rather than reading as an afterthought. */
-.card-frame--stack .card-face { height: 293px; }
-.card-frame--stack .card-caption { margin-top: 12px; }
-.card-frame--stack .card-caption__tag { font-size: 13px; padding: 4px 10px; }
-.card-frame--stack .card-caption__value { font-size: 20px; }
+   (parallel + price) is sized to match rather than reading as an afterthought. Width is
+   capped at min(84vw, 400px) and height is exactly that times 1050/750 (1.4), matching the
+   real 750x1050 card art pixel-for-pixel so there is never a letterboxed gap around it. */
+.card-frame--stack .card-face { height: calc(min(84vw, 400px) * 1.4); }
+.card-frame--stack .card-caption { margin-top: 14px; }
+.card-frame--stack .card-caption__tag { font-size: 15px; padding: 5px 12px; }
+.card-frame--stack .card-caption__value { font-size: 24px; }
 
 /* Breaker stage — deliberately dark regardless of site theme, like a spotlit table,
    not a page section. Text/buttons inside get their own light-on-dark treatment. */
@@ -377,17 +380,42 @@ select {
 
 .pack-intro-title { margin: 4px 0 2px; font-size: 22px; }
 .pack-intro-sub { font-size: 13px; margin: 0 0 18px; }
-.pack3d-wrap { perspective: 900px; margin-bottom: 4px; }
+.pack3d-wrap { perspective: 1100px; margin-bottom: 4px; }
 .pack3d {
   position: relative; width: 150px; height: 210px; margin: 0 auto;
   transform-style: preserve-3d; cursor: pointer;
-  transform: rotateY(-14deg) rotateX(6deg);
+  transform: rotateY(-24deg) rotateX(8deg);
   animation: packFloat 3.4s ease-in-out infinite;
 }
 @keyframes packFloat {
-  0%, 100% { transform: rotateY(-14deg) rotateX(6deg) translateY(0); }
-  50% { transform: rotateY(-8deg) rotateX(3deg) translateY(-6px); }
+  0%, 100% { transform: rotateY(-24deg) rotateX(8deg) translateY(0); }
+  50% { transform: rotateY(-14deg) rotateX(4deg) translateY(-6px); }
 }
+/* Multi-spin wind-up before the tear — a few full rotations so the pack reads as a real
+   3D object (front/back/edge faces all visible in turn) before it rips open. */
+.pack3d.spinning { animation: packSpin 1.15s cubic-bezier(.55,.05,.35,1) forwards; }
+@keyframes packSpin {
+  0% { transform: rotateY(-24deg) rotateX(8deg); }
+  100% { transform: rotateY(1056deg) rotateX(8deg); }
+}
+.pack3d.tearing { animation: none; }
+.pack3d__face {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  border-radius: 14px; backface-visibility: hidden;
+}
+.pack3d__face--front { overflow: visible; transform: translateZ(9px); }
+.pack3d__face--back {
+  overflow: hidden; transform: rotateY(180deg) translateZ(9px);
+  background: linear-gradient(150deg, #5b4a14 0%, #2c2408 100%);
+  display: flex; align-items: center; justify-content: center;
+}
+.pack3d__backmark { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: .1em; color: rgba(255,255,255,.35); }
+.pack3d__face--left, .pack3d__face--right {
+  width: 18px; height: 100%; overflow: hidden;
+  background: linear-gradient(180deg, rgba(255,255,255,.3), rgba(0,0,0,.4));
+}
+.pack3d__face--left { left: 0; transform-origin: left center; transform: rotateY(-90deg); }
+.pack3d__face--right { left: auto; right: 0; transform-origin: right center; transform: rotateY(90deg); }
 .pack3d__half {
   position: absolute; left: 0; width: 100%; height: 50%; overflow: hidden; border-radius: 14px;
   box-shadow: 0 16px 34px rgba(0,0,0,.55);
@@ -412,7 +440,6 @@ select {
   animation: packShine 2.6s ease-in-out infinite;
 }
 @keyframes packShine { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-.pack3d.tearing { animation: none; }
 .pack3d.tearing .pack3d__shine { opacity: 0; transition: opacity .1s; }
 .pack3d.tearing .pack3d__half--top { animation: tearTop .55s ease-in forwards; }
 .pack3d.tearing .pack3d__half--bottom { animation: tearBottom .55s ease-in forwards; }
@@ -494,20 +521,24 @@ select {
    autograph, etc). Swiping or tapping the front card takes it and promotes the next. */
 .pack-progress { font-size: 12px; color: #97a29c; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
 /* The front card is the biggest card display in the app on purpose — this is the actual
-   "pull" moment. height is sized for the front card's box (293px, see .card-frame--stack)
-   plus its caption; peeking cards behind it have no caption so they never need the extra
-   room, and being absolutely positioned they're unaffected by it either way. */
-.stack-wrap { position: relative; height: 350px; margin: 4px auto 18px; }
+   "pull" moment, sized to fill most of the screen (see .card-frame--stack). Peeking cards
+   behind it stay at a small fixed size since they're still a mystery and only need to hint
+   at their color; the wrap's own size always matches the front card exactly so it never
+   clips or leaves extra dead space. */
+.stack-wrap {
+  position: relative; margin: 4px auto 18px;
+  width: calc(min(84vw, 400px) + 40px); height: calc(min(84vw, 400px) * 1.4 + 78px);
+}
 .stack-item {
   position: absolute; left: 0; top: 0; width: 220px;
   transition: transform .3s ease, opacity .3s ease;
 }
+.stack-item--front { width: min(84vw, 400px); cursor: grab; touch-action: none; }
+.stack-item--front:active { cursor: grabbing; }
 /* Peeking cards render the bare box (no .card-frame wrapper, no caption — they're still a
    mystery), so they need their own explicit height; the front card gets its height from
    .card-frame--stack .card-face instead. */
 .stack-item > .card-face { height: 293px; }
-.stack-item--front { cursor: grab; touch-action: none; }
-.stack-item--front:active { cursor: grabbing; }
 .stack-hint { font-size: 12px; color: #97a29c; margin: 10px 0 0; }
 
 /* Any $1,000+ card gets a permanent pulsing glow, everywhere its face is shown. */
