@@ -218,7 +218,11 @@
       packsPerBox: 6, cardsPerPack: 5, cardsPerBox: 30,
       blurb: "The main premium format — noticeably better refractor and autograph odds, one autograph guaranteed.",
       guaranteedAutographs: 1, guaranteedCaseHit: true,
-      caseHitP: 1 / 96, baseAutoP: 1 / 60, colorAutoP: 1 / 70,
+      // Retuned after switching to fixed per-card pricing (see CARD_PRICE): with prices
+      // no longer scaling by format, these odds are what makes a Hobby box worth opening
+      // — Monte Carlo simulated against the real CARD_PRICE table to land the box's win
+      // rate (pulled value >= price paid) at ~65%.
+      caseHitP: 1 / 18, baseAutoP: 1 / 11, colorAutoP: 1 / 13,
       packOdds: { refractor: 2, green: 8, blue: 18, orange: 35, gold: 70, red: 175, black: 350, superfractor: 1750 }
     },
     {
@@ -227,7 +231,9 @@
       packsPerBox: 8, cardsPerPack: 6, cardsPerBox: 48,
       blurb: "The most loaded format on the shelf — a refractor in every pack and two autographs guaranteed.",
       guaranteedAutographs: 2, guaranteedCaseHit: true,
-      caseHitP: 1 / 60, baseAutoP: 1 / 40, colorAutoP: 1 / 35,
+      // Same retuning as Hobby above — simulated to land Jumbo's box win rate at ~65%
+      // against the fixed CARD_PRICE table.
+      caseHitP: 1 / 13, baseAutoP: 1 / 9, colorAutoP: 1 / 8,
       packOdds: { refractor: 1, green: 5, blue: 10, orange: 20, gold: 40, red: 100, black: 200, superfractor: 1000 }
     }
   ];
