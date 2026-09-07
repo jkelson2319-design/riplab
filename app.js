@@ -42,8 +42,6 @@
     autograph: 3,
     caseHit: 15
   };
-  // Floor on any Case Hit (Cathedral) card's value — see makeHitCard.
-  var CASE_HIT_MIN_VALUE = 500;
   // Plain refractor/color tag name -> its CARD_MULT key. Case Hit is deliberately
   // excluded: it's a separate chase family, not a rung on this color ladder.
   var COLOR_TAG_MULT_KEY = {
@@ -249,6 +247,39 @@
   // pull, but not a payday.
   var POSITION_VALUE_MULT = { QB: 2.2, WR: 1.6, RB: 1.2, TE: 0.9, DEF: 0.5 };
 
+  // Cathedral (Case Hit) is priced on its own tiered scale rather than the usual
+  // PLAYER BASE VALUE x CARD_MULT math, which tops out well under $500 regardless of
+  // player/position/format. Every Case Hit is worth at least CASE_HIT_MIN_VALUE, scaling
+  // up toward CASE_HIT_MAX_VALUE for the best-case pulls (a Jumbo-format QB) — position
+  // and format still matter, they just move you along this scale instead of off it.
+  // Bounds are derived from the real HIT_CARD_VALUE/valueScale/POSITION_VALUE_MULT ranges
+  // so the tiering keeps making sense if the economy is retuned later.
+  var CASE_HIT_MIN_VALUE = 500;
+  var CASE_HIT_MAX_VALUE = 2000;
+  function caseHitRawBounds() {
+    var lo = Infinity, hi = -Infinity;
+    FORMATS.forEach(function (f) {
+      Object.keys(POSITION_VALUE_MULT).forEach(function (pos) {
+        var baseScale = f.valueScale * POSITION_VALUE_MULT[pos];
+        var l = Math.max(1, Math.round(HIT_CARD_VALUE[0] * baseScale));
+        var h = Math.max(l, Math.round(HIT_CARD_VALUE[1] * baseScale));
+        if (l < lo) lo = l;
+        if (h > hi) hi = h;
+      });
+    });
+    return { lo: lo, hi: hi };
+  }
+  var CASE_HIT_RAW_BOUNDS = caseHitRawBounds();
+  // Maps a raw "player base value" roll (same input every other hit card's value comes
+  // from) onto the $500-$2000 tier, linearly by where it falls in the game-wide range of
+  // possible rolls.
+  function caseHitTieredValue(rawValue) {
+    var span = CASE_HIT_RAW_BOUNDS.hi - CASE_HIT_RAW_BOUNDS.lo;
+    var t = span > 0 ? (rawValue - CASE_HIT_RAW_BOUNDS.lo) / span : 1;
+    t = Math.max(0, Math.min(1, t));
+    return Math.round(CASE_HIT_MIN_VALUE + t * (CASE_HIT_MAX_VALUE - CASE_HIT_MIN_VALUE));
+  }
+
   var STORAGE_KEY = "break-room-save-v1";
   var state = loadState();
   var pendingBreak = null; // format being configured in the buy-in modal
@@ -305,11 +336,12 @@
     var lo = Math.max(1, Math.round(HIT_CARD_VALUE[0] * baseScale));
     var hi = Math.max(lo, Math.round(HIT_CARD_VALUE[1] * baseScale));
     var playerBaseValue = rand(lo, hi);
-    var value = Math.round(playerBaseValue * cardValueMultiplier(tag, isAutograph));
-    // Cathedral (the Case Hit design) is a marquee chase card regardless of which player
-    // or format it comes out of — guarantee it's worth something even when the roll's
-    // usual player-value x multiplier math would land well under that.
-    if (tag === "Case Hit") value = Math.max(value, CASE_HIT_MIN_VALUE);
+    // Cathedral (Case Hit) skips the usual multiplier math for its own $500-$2000 tier —
+    // see caseHitTieredValue. Everything else still goes through PLAYER BASE VALUE x
+    // PARALLEL MULT x AUTO MULT as before.
+    var value = tag === "Case Hit"
+      ? caseHitTieredValue(playerBaseValue)
+      : Math.round(playerBaseValue * cardValueMultiplier(tag, isAutograph));
     return {
       id: uid(), team: team, player: player.name, pos: player.pos,
       isRookie: !!player.rookie, tag: tag, value: value, isMega: value >= format.megaThreshold
@@ -1304,20 +1336,35 @@
       for (var i = 0; i < p.revealedCount; i++) revealedCards.push(p.cards[i]);
     });
 
+    // Mid-rip: most recently pulled first. Once the whole break is done, re-sort by
+    // value so the biggest hits lead the recap instead of just whatever came out last.
+    function byRecapOrder(cards) {
+      return done
+        ? cards.slice().sort(function (a, b) { return b.value - a.value; })
+        : cards.slice().reverse();
+    }
+    function thumbStripHTML(cards) {
+      return cards.map(function (card) {
+        return '<div class="history-thumb">' + cardWithCaptionHTML(card, wholeBox || card.team === ab.yourTeam, "sm", "thumb") + '</div>';
+      }).join("");
+    }
+
     var historyHTML = "";
     if (revealedCards.length > 0) {
-      // Mid-rip: most recently pulled first. Once the whole break is done, re-sort by
-      // value so the biggest hits lead the recap instead of just whatever came out last.
-      var seen = done
-        ? revealedCards.slice().sort(function (a, b) { return b.value - a.value; })
-        : revealedCards.slice().reverse();
       historyHTML =
         '<div class="history-label">Pulled so far (' + revealed + ' / ' + total + ')</div>' +
-        '<div class="history-strip">' +
-          seen.map(function (card) {
-            return '<div class="history-thumb">' + cardWithCaptionHTML(card, wholeBox || card.team === ab.yourTeam, "sm", "thumb") + '</div>';
-          }).join("") +
-        '</div>';
+        '<div class="history-strip">' + thumbStripHTML(byRecapOrder(revealedCards)) + '</div>';
+    }
+
+    // Hits row: every card with a tag (refractor, autograph, or Case Hit) — the ones the
+    // pack odds actually singled out — shown above the full "every card" history so the
+    // notable pulls aren't buried in a strip of $1-$6 base cards.
+    var hitCards = revealedCards.filter(function (c) { return !!c.tag; });
+    var hitsHTML = "";
+    if (hitCards.length > 0) {
+      hitsHTML =
+        '<div class="history-label history-label--hits">Hits so far (' + hitCards.length + ')</div>' +
+        '<div class="history-strip history-strip--hits">' + thumbStripHTML(byRecapOrder(hitCards)) + '</div>';
     }
 
     var mainHTML;
@@ -1368,6 +1415,7 @@
       '</div>' +
       '<div class="progress-track"><div class="progress-fill" style="width:' + Math.round((revealed / total) * 100) + '%"></div></div>' +
       mainHTML +
+      hitsHTML +
       historyHTML;
 
     if (document.getElementById("stackWrap")) maybeBurstFrontCard(ab);
