@@ -28,7 +28,7 @@
   // ---------- card pricing (single source of truth) ----------
   // Every card's value is a fixed lookup by player + tag — set by hand (see CARD_PRICE
   // below), not computed from format/position/randomness. The same player's same parallel
-  // is worth the same amount whether it's pulled from a $40 Retail box or a $600 Jumbo box.
+  // is worth the same amount whether it's pulled from a $74 Retail box or a $600 Jumbo box.
   // "Base" (tag=null) covers both ordinary pack filler and the rare case where the pack's
   // one hit slot itself rolls no parallel — same player, same price either way.
   var CARD_PRICE = {
@@ -205,7 +205,7 @@
   var FORMATS = [
     {
       id: "retail", tier: "RETAIL", name: "Retail",
-      boxPrice: 40, casePrice: 800, boxesPerCase: 20,
+      boxPrice: 74, casePrice: 1480, boxesPerCase: 20,
       packsPerBox: 4, cardsPerPack: 4, cardsPerBox: 16,
       blurb: "The cheapest way in. Mostly base cards, but every chase card — up to a 1/1 — is still in the pool.",
       guaranteedAutographs: 0,
