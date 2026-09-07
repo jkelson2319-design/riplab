@@ -25,25 +25,44 @@
     "Superfractor 1/1": "linear-gradient(120deg, #ff2d6e, #ff9900, #f5e642, #33e07a, #29c5ff, #9b5cff, #ff2d6e)",
     "Case Hit":         "linear-gradient(135deg, #050505 0%, #3a1a52 30%, #8a3fd6 50%, #3a1a52 70%, #050505 100%)"
   };
-  // ---------- card value multipliers (single source of truth) ----------
-  // Every card's value is PLAYER BASE VALUE x PARALLEL MULT x AUTO MULT (if applicable).
-  // Nothing else in the file should hardcode a rarity multiplier — everything reads from
-  // here so the whole economy can be rebalanced by editing this one object.
-  var CARD_MULT = {
-    base: 1,
-    refractor: 1.5,
-    green: 2.25,
-    blue: 3.5,
-    orange: 5,
-    gold: 8,
-    red: 14,
-    black: 24,
-    superfractor: 60,
-    autograph: 3,
-    caseHit: 15
+  // ---------- card pricing (single source of truth) ----------
+  // Every card's value is a fixed lookup by player + tag — set by hand (see CARD_PRICE
+  // below), not computed from format/position/randomness. The same player's same parallel
+  // is worth the same amount whether it's pulled from a $40 Retail box or a $600 Jumbo box.
+  // "Base" (tag=null) covers both ordinary pack filler and the rare case where the pack's
+  // one hit slot itself rolls no parallel — same player, same price either way.
+  var CARD_PRICE = {
+    "Justin Hayes": { "Base": 15, "Refractor": 35, "Green Refractor": 50, "Blue Refractor": 80, "Orange Refractor": 120, "Gold Refractor": 200, "Red Refractor": 400, "Black Refractor": 1000, "Superfractor 1/1": 15000, "Base Autograph": 300, "Refractor Autograph": 600, "Green Refractor Autograph": 700, "Blue Refractor Autograph": 1000, "Orange Refractor Autograph": 1500, "Gold Refractor Autograph": 3000, "Red Refractor Autograph": 5000, "Black Refractor Autograph": 7500, "Superfractor Autograph 1/1": 75000, "Case Hit": 3000 },
+    "Omar Nichols": { "Base": 2, "Refractor": 5, "Green Refractor": 8, "Blue Refractor": 15, "Orange Refractor": 25, "Gold Refractor": 50, "Red Refractor": 100, "Black Refractor": 200, "Superfractor 1/1": 2000, "Base Autograph": 40, "Refractor Autograph": 80, "Green Refractor Autograph": 100, "Blue Refractor Autograph": 150, "Orange Refractor Autograph": 225, "Gold Refractor Autograph": 450, "Red Refractor Autograph": 800, "Black Refractor Autograph": 1200, "Superfractor Autograph 1/1": 12000, "Case Hit": 700 },
+    "Jalen Cross": { "Base": 2, "Refractor": 5, "Green Refractor": 8, "Blue Refractor": 15, "Orange Refractor": 25, "Gold Refractor": 50, "Red Refractor": 100, "Black Refractor": 200, "Superfractor 1/1": 2000, "Base Autograph": 40, "Refractor Autograph": 80, "Green Refractor Autograph": 100, "Blue Refractor Autograph": 150, "Orange Refractor Autograph": 225, "Gold Refractor Autograph": 450, "Red Refractor Autograph": 800, "Black Refractor Autograph": 1200, "Superfractor Autograph 1/1": 12000, "Case Hit": 700 },
+    "Theo Mercer": { "Base": 2, "Refractor": 5, "Green Refractor": 8, "Blue Refractor": 15, "Orange Refractor": 25, "Gold Refractor": 50, "Red Refractor": 100, "Black Refractor": 200, "Superfractor 1/1": 2000, "Base Autograph": 40, "Refractor Autograph": 80, "Green Refractor Autograph": 100, "Blue Refractor Autograph": 150, "Orange Refractor Autograph": 225, "Gold Refractor Autograph": 450, "Red Refractor Autograph": 800, "Black Refractor Autograph": 1200, "Superfractor Autograph 1/1": 12000, "Case Hit": 700 },
+    "Malcolm Price": { "Base": 1, "Refractor": 3, "Green Refractor": 5, "Blue Refractor": 8, "Orange Refractor": 15, "Gold Refractor": 30, "Red Refractor": 60, "Black Refractor": 120, "Superfractor 1/1": 1200, "Base Autograph": 20, "Refractor Autograph": 40, "Green Refractor Autograph": 50, "Blue Refractor Autograph": 75, "Orange Refractor Autograph": 100, "Gold Refractor Autograph": 200, "Red Refractor Autograph": 350, "Black Refractor Autograph": 500, "Superfractor Autograph 1/1": 5000, "Case Hit": 500 },
+    "Jett Jones": { "Base": 12, "Refractor": 30, "Green Refractor": 45, "Blue Refractor": 70, "Orange Refractor": 110, "Gold Refractor": 180, "Red Refractor": 360, "Black Refractor": 720, "Superfractor 1/1": 1400, "Base Autograph": 240, "Refractor Autograph": 480, "Green Refractor Autograph": 550, "Blue Refractor Autograph": 750, "Orange Refractor Autograph": 1000, "Gold Refractor Autograph": 2000, "Red Refractor Autograph": 3500, "Black Refractor Autograph": 5000, "Superfractor Autograph 1/1": 50000, "Case Hit": 2000 },
+    "Cal Braddock": { "Base": 4, "Refractor": 9, "Green Refractor": 15, "Blue Refractor": 25, "Orange Refractor": 40, "Gold Refractor": 80, "Red Refractor": 160, "Black Refractor": 320, "Superfractor 1/1": 1300, "Base Autograph": 80, "Refractor Autograph": 160, "Green Refractor Autograph": 200, "Blue Refractor Autograph": 300, "Orange Refractor Autograph": 450, "Gold Refractor Autograph": 900, "Red Refractor Autograph": 1700, "Black Refractor Autograph": 2500, "Superfractor Autograph 1/1": 25000, "Case Hit": 1500 },
+    "Malachi Naylor": { "Base": 2, "Refractor": 5, "Green Refractor": 8, "Blue Refractor": 15, "Orange Refractor": 25, "Gold Refractor": 50, "Red Refractor": 100, "Black Refractor": 200, "Superfractor 1/1": 2000, "Base Autograph": 40, "Refractor Autograph": 80, "Green Refractor Autograph": 100, "Blue Refractor Autograph": 150, "Orange Refractor Autograph": 225, "Gold Refractor Autograph": 450, "Red Refractor Autograph": 800, "Black Refractor Autograph": 1200, "Superfractor Autograph 1/1": 12000, "Case Hit": 700 },
+    "Roman Ranson": { "Base": 1, "Refractor": 3, "Green Refractor": 5, "Blue Refractor": 8, "Orange Refractor": 15, "Gold Refractor": 30, "Red Refractor": 60, "Black Refractor": 120, "Superfractor 1/1": 1200, "Base Autograph": 20, "Refractor Autograph": 40, "Green Refractor Autograph": 50, "Blue Refractor Autograph": 75, "Orange Refractor Autograph": 100, "Gold Refractor Autograph": 200, "Red Refractor Autograph": 350, "Black Refractor Autograph": 500, "Superfractor Autograph 1/1": 5000, "Case Hit": 500 },
+    "Taylor Lease": { "Base": 2, "Refractor": 5, "Green Refractor": 8, "Blue Refractor": 15, "Orange Refractor": 25, "Gold Refractor": 50, "Red Refractor": 100, "Black Refractor": 200, "Superfractor 1/1": 2000, "Base Autograph": 40, "Refractor Autograph": 80, "Green Refractor Autograph": 100, "Blue Refractor Autograph": 150, "Orange Refractor Autograph": 225, "Gold Refractor Autograph": 450, "Red Refractor Autograph": 800, "Black Refractor Autograph": 1200, "Superfractor Autograph 1/1": 12000, "Case Hit": 700 },
+    "Darius King": { "Base": 10, "Refractor": 25, "Green Refractor": 35, "Blue Refractor": 60, "Orange Refractor": 100, "Gold Refractor": 170, "Red Refractor": 340, "Black Refractor": 680, "Superfractor 1/1": 7000, "Base Autograph": 200, "Refractor Autograph": 400, "Green Refractor Autograph": 450, "Blue Refractor Autograph": 600, "Orange Refractor Autograph": 800, "Gold Refractor Autograph": 1600, "Red Refractor Autograph": 2800, "Black Refractor Autograph": 4400, "Superfractor Autograph 1/1": 44000, "Case Hit": 1900 },
+    "DeShawn Booker": { "Base": 10, "Refractor": 25, "Green Refractor": 35, "Blue Refractor": 60, "Orange Refractor": 100, "Gold Refractor": 170, "Red Refractor": 340, "Black Refractor": 680, "Superfractor 1/1": 7000, "Base Autograph": 200, "Refractor Autograph": 400, "Green Refractor Autograph": 450, "Blue Refractor Autograph": 600, "Orange Refractor Autograph": 800, "Gold Refractor Autograph": 1600, "Red Refractor Autograph": 2800, "Black Refractor Autograph": 4400, "Superfractor Autograph 1/1": 44000, "Case Hit": 1900 },
+    "Devin Hayes": { "Base": 1, "Refractor": 3, "Green Refractor": 5, "Blue Refractor": 8, "Orange Refractor": 15, "Gold Refractor": 30, "Red Refractor": 60, "Black Refractor": 120, "Superfractor 1/1": 1200, "Base Autograph": 20, "Refractor Autograph": 40, "Green Refractor Autograph": 50, "Blue Refractor Autograph": 75, "Orange Refractor Autograph": 100, "Gold Refractor Autograph": 200, "Red Refractor Autograph": 350, "Black Refractor Autograph": 500, "Superfractor Autograph 1/1": 5000, "Case Hit": 500 },
+    "Kai Skywalker": { "Base": 3, "Refractor": 8, "Green Refractor": 13, "Blue Refractor": 20, "Orange Refractor": 35, "Gold Refractor": 60, "Red Refractor": 120, "Black Refractor": 240, "Superfractor 1/1": 2500, "Base Autograph": 60, "Refractor Autograph": 120, "Green Refractor Autograph": 150, "Blue Refractor Autograph": 250, "Orange Refractor Autograph": 375, "Gold Refractor Autograph": 750, "Red Refractor Autograph": 1300, "Black Refractor Autograph": 2400, "Superfractor Autograph 1/1": 24000, "Case Hit": 1400 },
+    "Marcus Reddick": { "Base": 1, "Refractor": 3, "Green Refractor": 5, "Blue Refractor": 8, "Orange Refractor": 15, "Gold Refractor": 30, "Red Refractor": 60, "Black Refractor": 120, "Superfractor 1/1": 1200, "Base Autograph": 20, "Refractor Autograph": 40, "Green Refractor Autograph": 50, "Blue Refractor Autograph": 75, "Orange Refractor Autograph": 100, "Gold Refractor Autograph": 200, "Red Refractor Autograph": 350, "Black Refractor Autograph": 500, "Superfractor Autograph 1/1": 5000, "Case Hit": 500 },
+    "Joe Steele": { "Base": 9, "Refractor": 22, "Green Refractor": 32, "Blue Refractor": 55, "Orange Refractor": 90, "Gold Refractor": 160, "Red Refractor": 320, "Black Refractor": 640, "Superfractor 1/1": 6750, "Base Autograph": 180, "Refractor Autograph": 360, "Green Refractor Autograph": 400, "Blue Refractor Autograph": 525, "Orange Refractor Autograph": 700, "Gold Refractor Autograph": 1400, "Red Refractor Autograph": 2500, "Black Refractor Autograph": 3500, "Superfractor Autograph 1/1": 35000, "Case Hit": 1700 },
+    "Art Mixon": { "Base": 3, "Refractor": 8, "Green Refractor": 13, "Blue Refractor": 20, "Orange Refractor": 32, "Gold Refractor": 60, "Red Refractor": 120, "Black Refractor": 240, "Superfractor 1/1": 2500, "Base Autograph": 60, "Refractor Autograph": 120, "Green Refractor Autograph": 150, "Blue Refractor Autograph": 250, "Orange Refractor Autograph": 350, "Gold Refractor Autograph": 700, "Red Refractor Autograph": 1200, "Black Refractor Autograph": 1800, "Superfractor Autograph 1/1": 18000, "Case Hit": 800 },
+    "Anakin Blair": { "Base": 3, "Refractor": 8, "Green Refractor": 13, "Blue Refractor": 20, "Orange Refractor": 32, "Gold Refractor": 60, "Red Refractor": 120, "Black Refractor": 240, "Superfractor 1/1": 2500, "Base Autograph": 60, "Refractor Autograph": 120, "Green Refractor Autograph": 150, "Blue Refractor Autograph": 250, "Orange Refractor Autograph": 350, "Gold Refractor Autograph": 700, "Red Refractor Autograph": 1200, "Black Refractor Autograph": 1800, "Superfractor Autograph 1/1": 18000, "Case Hit": 800 },
+    "Cole Tristan": { "Base": 3, "Refractor": 8, "Green Refractor": 13, "Blue Refractor": 20, "Orange Refractor": 32, "Gold Refractor": 60, "Red Refractor": 120, "Black Refractor": 240, "Superfractor 1/1": 2500, "Base Autograph": 60, "Refractor Autograph": 120, "Green Refractor Autograph": 150, "Blue Refractor Autograph": 250, "Orange Refractor Autograph": 350, "Gold Refractor Autograph": 700, "Red Refractor Autograph": 1200, "Black Refractor Autograph": 1800, "Superfractor Autograph 1/1": 18000, "Case Hit": 800 },
+    "Big D Chester": { "Base": 3, "Refractor": 8, "Green Refractor": 13, "Blue Refractor": 20, "Orange Refractor": 32, "Gold Refractor": 60, "Red Refractor": 120, "Black Refractor": 240, "Superfractor 1/1": 2500, "Base Autograph": 60, "Refractor Autograph": 120, "Green Refractor Autograph": 150, "Blue Refractor Autograph": 250, "Orange Refractor Autograph": 350, "Gold Refractor Autograph": 700, "Red Refractor Autograph": 1200, "Black Refractor Autograph": 1800, "Superfractor Autograph 1/1": 18000, "Case Hit": 800 },
   };
-  // Plain refractor/color tag name -> its CARD_MULT key. Case Hit is deliberately
-  // excluded: it's a separate chase family, not a rung on this color ladder.
+  function cardPriceFor(playerName, tag) {
+    var table = CARD_PRICE[playerName];
+    var key = tag || "Base";
+    if (table && table.hasOwnProperty(key)) return table[key];
+    return 1; // fallback for a player/tag not yet priced
+  }
+
+  // Plain refractor/color tag name -> its short internal key, used to look up pack odds
+  // (packOdds) and cosmetic tint filters. Case Hit is deliberately excluded: it's a
+  // separate chase family, not a rung on this color ladder.
   var COLOR_TAG_MULT_KEY = {
     "Refractor": "refractor", "Green Refractor": "green", "Blue Refractor": "blue",
     "Orange Refractor": "orange", "Gold Refractor": "gold", "Red Refractor": "red",
@@ -61,27 +80,6 @@
     if (m && COLOR_TAG_MULT_KEY.hasOwnProperty(m[1])) return m[1];
     return null;
   }
-  // The parallel multiplier a tag contributes on its own, before any autograph bonus —
-  // e.g. "Blue Refractor" and "Blue Refractor Autograph" both resolve to CARD_MULT.blue.
-  function parallelMultFor(tag) {
-    if (!tag) return CARD_MULT.base;
-    var colorTag = tierValueKey(tag);
-    if (colorTag && COLOR_TAG_MULT_KEY.hasOwnProperty(colorTag)) return CARD_MULT[COLOR_TAG_MULT_KEY[colorTag]];
-    return CARD_MULT.base; // e.g. "Base Autograph"
-  }
-  // Case Hit is its own standalone chase family — it does not stack with the parallel
-  // ladder or an autograph bonus.
-  function cardValueMultiplier(tag, isAutograph) {
-    if (tag === "Case Hit") return CARD_MULT.caseHit;
-    var mult = parallelMultFor(tag);
-    return isAutograph ? mult * CARD_MULT.autograph : mult;
-  }
-
-  // Flat value range for ordinary base cards (every card that isn't a pack's hit slot).
-  var BASE_CARD_VALUE = [1, 6];
-  // A pack's hit-slot card starts from this same "player base value" range, then the
-  // parallel/autograph/case-hit multiplier above is applied on top of it.
-  var HIT_CARD_VALUE = [2, 8];
 
   var PRODUCT_NAME = "RLFL Debut Chrome";
 
@@ -210,7 +208,7 @@
       boxPrice: 40, casePrice: 800, boxesPerCase: 20,
       packsPerBox: 4, cardsPerPack: 4, cardsPerBox: 16,
       blurb: "The cheapest way in. Mostly base cards, but every chase card — up to a 1/1 — is still in the pool.",
-      valueScale: 0.465, guaranteedAutographs: 0,
+      guaranteedAutographs: 0,
       caseHitP: 1 / 150, baseAutoP: 1 / 100, colorAutoP: 1 / 400,
       packOdds: { refractor: 3, green: 16, blue: 35, orange: 70, gold: 140, red: 350, black: 700, superfractor: 3500 }
     },
@@ -219,7 +217,7 @@
       boxPrice: 250, casePrice: 3000, boxesPerCase: 12,
       packsPerBox: 6, cardsPerPack: 5, cardsPerBox: 30,
       blurb: "The main premium format — noticeably better refractor and autograph odds, one autograph guaranteed.",
-      valueScale: 1.40, guaranteedAutographs: 1, guaranteedCaseHit: true,
+      guaranteedAutographs: 1, guaranteedCaseHit: true,
       caseHitP: 1 / 96, baseAutoP: 1 / 60, colorAutoP: 1 / 70,
       packOdds: { refractor: 2, green: 8, blue: 18, orange: 35, gold: 70, red: 175, black: 350, superfractor: 1750 }
     },
@@ -228,7 +226,7 @@
       boxPrice: 600, casePrice: 4800, boxesPerCase: 8,
       packsPerBox: 8, cardsPerPack: 6, cardsPerBox: 48,
       blurb: "The most loaded format on the shelf — a refractor in every pack and two autographs guaranteed.",
-      valueScale: 1.90, guaranteedAutographs: 2, guaranteedCaseHit: true,
+      guaranteedAutographs: 2, guaranteedCaseHit: true,
       caseHitP: 1 / 60, baseAutoP: 1 / 40, colorAutoP: 1 / 35,
       packOdds: { refractor: 1, green: 5, blue: 10, orange: 20, gold: 40, red: 100, black: 200, superfractor: 1000 }
     }
@@ -241,44 +239,6 @@
     // values run far lower than Jumbo's.
     f.megaThreshold = f.boxPrice * 2;
   });
-
-  // Skill-position hierarchy: QBs command the most. Defense is much less collectible, so
-  // even a nice-tier hit on a DEF card stays modest — the color/rarity makes it a notable
-  // pull, but not a payday.
-  var POSITION_VALUE_MULT = { QB: 2.2, WR: 1.6, RB: 1.2, TE: 0.9, DEF: 0.5 };
-
-  // Cathedral (Case Hit) is priced on its own tiered scale rather than the usual
-  // PLAYER BASE VALUE x CARD_MULT math, which tops out well under $500 regardless of
-  // player/position/format. Every Case Hit is worth at least CASE_HIT_MIN_VALUE, scaling
-  // up toward CASE_HIT_MAX_VALUE for the best-case pulls (a Jumbo-format QB) — position
-  // and format still matter, they just move you along this scale instead of off it.
-  // Bounds are derived from the real HIT_CARD_VALUE/valueScale/POSITION_VALUE_MULT ranges
-  // so the tiering keeps making sense if the economy is retuned later.
-  var CASE_HIT_MIN_VALUE = 500;
-  var CASE_HIT_MAX_VALUE = 2000;
-  function caseHitRawBounds() {
-    var lo = Infinity, hi = -Infinity;
-    FORMATS.forEach(function (f) {
-      Object.keys(POSITION_VALUE_MULT).forEach(function (pos) {
-        var baseScale = f.valueScale * POSITION_VALUE_MULT[pos];
-        var l = Math.max(1, Math.round(HIT_CARD_VALUE[0] * baseScale));
-        var h = Math.max(l, Math.round(HIT_CARD_VALUE[1] * baseScale));
-        if (l < lo) lo = l;
-        if (h > hi) hi = h;
-      });
-    });
-    return { lo: lo, hi: hi };
-  }
-  var CASE_HIT_RAW_BOUNDS = caseHitRawBounds();
-  // Maps a raw "player base value" roll (same input every other hit card's value comes
-  // from) onto the $500-$2000 tier, linearly by where it falls in the game-wide range of
-  // possible rolls.
-  function caseHitTieredValue(rawValue) {
-    var span = CASE_HIT_RAW_BOUNDS.hi - CASE_HIT_RAW_BOUNDS.lo;
-    var t = span > 0 ? (rawValue - CASE_HIT_RAW_BOUNDS.lo) / span : 1;
-    t = Math.max(0, Math.min(1, t));
-    return Math.round(CASE_HIT_MIN_VALUE + t * (CASE_HIT_MAX_VALUE - CASE_HIT_MIN_VALUE));
-  }
 
   var STORAGE_KEY = "break-room-save-v1";
   var state = loadState();
@@ -309,39 +269,25 @@
   }
   function uid() { return Math.random().toString(36).slice(2, 10); }
 
-  // Plain base card: any card that isn't its pack's designated hit-slot card.
+  // Plain base card: any card that isn't its pack's designated hit-slot card. Value is a
+  // fixed per-player lookup (CARD_PRICE) — same price for this player's "Base" tier no
+  // matter which format/box it came out of.
   function makeCard(format) {
     var team = pick(TEAMS);
     var player = pick(activeSet.roster[team]);
-    var posMult = POSITION_VALUE_MULT[player.pos] || 1;
-    var scale = format.valueScale * posMult;
-    var lo = Math.max(1, Math.round(BASE_CARD_VALUE[0] * scale));
-    var hi = Math.max(lo, Math.round(BASE_CARD_VALUE[1] * scale));
-    var value = rand(lo, hi);
+    var value = cardPriceFor(player.name, null);
     return {
       id: uid(), team: team, player: player.name, pos: player.pos,
       isRookie: !!player.rookie, tag: null, value: value, isMega: value >= format.megaThreshold
     };
   }
 
-  // A pack's hit-slot card: refractor / autograph / case hit. Its value is always
-  // PLAYER BASE VALUE x PARALLEL MULT x AUTO MULT (if applicable) — CARD_MULT is the only
-  // place rarity multipliers live, so the player being hit still matters as much as the
-  // parallel does (a star's Gold Refractor is worth far more than a scrub's).
-  function makeHitCard(format, tag, isAutograph) {
+  // A pack's hit-slot card: refractor / autograph / case hit. Value is the same fixed
+  // CARD_PRICE lookup as makeCard, keyed by this specific tag instead of "Base".
+  function makeHitCard(format, tag) {
     var team = pick(TEAMS);
     var player = pick(activeSet.roster[team]);
-    var posMult = POSITION_VALUE_MULT[player.pos] || 1;
-    var baseScale = format.valueScale * posMult;
-    var lo = Math.max(1, Math.round(HIT_CARD_VALUE[0] * baseScale));
-    var hi = Math.max(lo, Math.round(HIT_CARD_VALUE[1] * baseScale));
-    var playerBaseValue = rand(lo, hi);
-    // Cathedral (Case Hit) skips the usual multiplier math for its own $500-$2000 tier —
-    // see caseHitTieredValue. Everything else still goes through PLAYER BASE VALUE x
-    // PARALLEL MULT x AUTO MULT as before.
-    var value = tag === "Case Hit"
-      ? caseHitTieredValue(playerBaseValue)
-      : Math.round(playerBaseValue * cardValueMultiplier(tag, isAutograph));
+    var value = cardPriceFor(player.name, tag);
     return {
       id: uid(), team: team, player: player.name, pos: player.pos,
       isRookie: !!player.rookie, tag: tag, value: value, isMega: value >= format.megaThreshold
@@ -375,7 +321,7 @@
     var cards = [];
     for (var i = 0; i < format.cardsPerPack; i++) {
       if (i === hitIndex && hit.tag) {
-        cards.push(makeHitCard(format, hit.tag, hit.isAutograph));
+        cards.push(makeHitCard(format, hit.tag));
       } else {
         cards.push(makeCard(format));
       }
@@ -391,7 +337,7 @@
       var color = rollLadder(format.autoColorLadder) || "Refractor";
       tag = autoTagFromColorName(color);
     }
-    pack.cards[pack.hitIndex] = makeHitCard(format, tag, true);
+    pack.cards[pack.hitIndex] = makeHitCard(format, tag);
     pack.hasAutograph = true;
   }
 
@@ -426,7 +372,7 @@
       });
       if (!hasCaseHit) {
         var pack = pick(all);
-        pack.cards[format.cardsPerPack - 1] = makeHitCard(format, "Case Hit", false);
+        pack.cards[format.cardsPerPack - 1] = makeHitCard(format, "Case Hit");
       }
     }
     return all;
